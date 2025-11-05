@@ -1,0 +1,25 @@
+{
+  "initialized": true,
+  "mode": "file-router",
+  "projectName": "disc-leader",
+  "typescript": true,
+  "tailwind": true,
+  "git": true,
+  "addOnOptions": {},
+  "packageManager": "bun",
+  "version": 1,
+  "framework": "react-cra",
+  "chosenAddOns": [
+    "netlify",
+    "clerk",
+    "convex",
+    "sentry",
+    "compiler",
+    "form",
+    "t3env",
+    "table",
+    "start",
+    "tanstack-query",
+    "biome"
+  ]
+}

@@ -1,46 +1,43 @@
 import { Link } from "@tanstack/react-router";
 import {
-	ChevronDown,
-	ChevronRight,
-	ClipboardType,
-	Globe,
+	Gamepad2,
 	Home,
+	LayoutDashboard,
+	LogIn,
 	Menu,
-	Network,
-	SquareFunction,
-	StickyNote,
-	Table,
+	Search,
+	Users,
 	X,
 } from "lucide-react";
 
 import { useState } from "react";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
 import ClerkHeader from "../integrations/clerk/header-user.tsx";
 
 export default function Header() {
 	const [isOpen, setIsOpen] = useState(false);
-	const [groupedExpanded, setGroupedExpanded] = useState<
-		Record<string, boolean>
-	>({});
 
 	return (
 		<>
-			<header className="p-4 flex items-center bg-gray-800 text-white shadow-lg">
-				<button
-					onClick={() => setIsOpen(true)}
-					className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-					aria-label="Open menu"
-				>
-					<Menu size={24} />
-				</button>
-				<h1 className="ml-4 text-xl font-semibold">
-					<Link to="/">
-						<img
-							src="/tanstack-word-logo-white.svg"
-							alt="TanStack Logo"
-							className="h-10"
-						/>
+			<header className="p-4 flex items-center justify-between bg-gray-800 text-white shadow-lg">
+				<div className="flex items-center">
+					<button
+						onClick={() => setIsOpen(true)}
+						className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+						aria-label="Open menu"
+					>
+						<Menu size={24} />
+					</button>
+					<Link to="/" className="ml-4">
+						<h1 className="text-xl font-bold">
+							<span className="text-cyan-400">DISC</span>
+							<span className="text-gray-300">LEADER</span>
+						</h1>
 					</Link>
-				</h1>
+				</div>
+				<div className="hidden md:block">
+					<ClerkHeader />
+				</div>
 			</header>
 
 			<aside
@@ -49,7 +46,10 @@ export default function Header() {
 				}`}
 			>
 				<div className="flex items-center justify-between p-4 border-b border-gray-700">
-					<h2 className="text-xl font-bold">Navigation</h2>
+					<h2 className="text-xl font-bold">
+						<span className="text-cyan-400">DISC</span>
+						<span className="text-gray-300">LEADER</span>
+					</h2>
 					<button
 						onClick={() => setIsOpen(false)}
 						className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
@@ -60,214 +60,114 @@ export default function Header() {
 				</div>
 
 				<nav className="flex-1 p-4 overflow-y-auto">
-					<Link
-						to="/"
-						onClick={() => setIsOpen(false)}
-						className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
-						activeProps={{
-							className:
-								"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
-						}}
-					>
-						<Home size={20} />
-						<span className="font-medium">Home</span>
-					</Link>
-
-					{/* Demo Links Start */}
-
-					<Link
-						to="/demo/clerk"
-						onClick={() => setIsOpen(false)}
-						className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
-						activeProps={{
-							className:
-								"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
-						}}
-					>
-						<Globe size={20} />
-						<span className="font-medium">Clerk</span>
-					</Link>
-
-					<Link
-						to="/demo/convex"
-						onClick={() => setIsOpen(false)}
-						className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
-						activeProps={{
-							className:
-								"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
-						}}
-					>
-						<Globe size={20} />
-						<span className="font-medium">Convex</span>
-					</Link>
-
-					<Link
-						to="/demo/sentry/testing"
-						onClick={() => setIsOpen(false)}
-						className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
-						activeProps={{
-							className:
-								"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
-						}}
-					>
-						<Globe size={20} />
-						<span className="font-medium">Sentry</span>
-					</Link>
-
-					<Link
-						to="/demo/form/simple"
-						onClick={() => setIsOpen(false)}
-						className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
-						activeProps={{
-							className:
-								"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
-						}}
-					>
-						<ClipboardType size={20} />
-						<span className="font-medium">Simple Form</span>
-					</Link>
-
-					<Link
-						to="/demo/form/address"
-						onClick={() => setIsOpen(false)}
-						className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
-						activeProps={{
-							className:
-								"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
-						}}
-					>
-						<ClipboardType size={20} />
-						<span className="font-medium">Address Form</span>
-					</Link>
-
-					<Link
-						to="/demo/table"
-						onClick={() => setIsOpen(false)}
-						className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
-						activeProps={{
-							className:
-								"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
-						}}
-					>
-						<Table size={20} />
-						<span className="font-medium">TanStack Table</span>
-					</Link>
-
-					<Link
-						to="/demo/start/server-funcs"
-						onClick={() => setIsOpen(false)}
-						className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
-						activeProps={{
-							className:
-								"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
-						}}
-					>
-						<SquareFunction size={20} />
-						<span className="font-medium">Start - Server Functions</span>
-					</Link>
-
-					<Link
-						to="/demo/start/api-request"
-						onClick={() => setIsOpen(false)}
-						className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
-						activeProps={{
-							className:
-								"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
-						}}
-					>
-						<Network size={20} />
-						<span className="font-medium">Start - API Request</span>
-					</Link>
-
-					<div className="flex flex-row justify-between">
+					{/* Public Links - Always Visible */}
+					<div className="mb-6">
+						<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-3">
+							Watch
+						</h3>
 						<Link
-							to="/demo/start/ssr"
+							to="/"
 							onClick={() => setIsOpen(false)}
-							className="flex-1 flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
+							className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-1"
 							activeProps={{
 								className:
-									"flex-1 flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
+									"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-1",
 							}}
 						>
-							<StickyNote size={20} />
-							<span className="font-medium">Start - SSR Demos</span>
+							<Home size={20} />
+							<span className="font-medium">Home</span>
 						</Link>
-						<button
-							className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-							onClick={() =>
-								setGroupedExpanded((prev) => ({
-									...prev,
-									StartSSRDemo: !prev.StartSSRDemo,
-								}))
-							}
-						>
-							{groupedExpanded.StartSSRDemo ? (
-								<ChevronDown size={20} />
-							) : (
-								<ChevronRight size={20} />
-							)}
-						</button>
+
+						{/* TODO: Add Browse Games route when implemented */}
+						<div className="flex items-center gap-3 p-3 rounded-lg text-gray-500 mb-1 cursor-not-allowed">
+							<Search size={20} />
+							<span className="font-medium">Browse Games</span>
+							<span className="text-xs bg-gray-700 px-2 py-0.5 rounded">Coming Soon</span>
+						</div>
 					</div>
-					{groupedExpanded.StartSSRDemo && (
-						<div className="flex flex-col ml-4">
+
+					{/* Sign In Button - Only for Unauthenticated Users */}
+					<SignedOut>
+						<div className="mb-6">
+							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-3">
+								Account
+							</h3>
+							<SignInButton mode="modal">
+								<button className="w-full flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-1">
+									<LogIn size={20} />
+									<span className="font-medium">Sign In to Manage</span>
+								</button>
+							</SignInButton>
+							<p className="text-xs text-gray-500 px-3 mt-2">
+								Sign in to access admin features, manage games, and keep score.
+							</p>
+						</div>
+					</SignedOut>
+
+					{/* Admin Links - Only for Authenticated Users */}
+					<SignedIn>
+						<div className="mb-6">
+							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-3">
+								Admin
+							</h3>
 							<Link
-								to="/demo/start/ssr/spa-mode"
+								to="/admin"
 								onClick={() => setIsOpen(false)}
-								className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
+								className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-1"
 								activeProps={{
 									className:
-										"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
+										"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-1",
 								}}
 							>
-								<StickyNote size={20} />
-								<span className="font-medium">SPA Mode</span>
+								<LayoutDashboard size={20} />
+								<span className="font-medium">Dashboard</span>
 							</Link>
 
 							<Link
-								to="/demo/start/ssr/full-ssr"
+								to="/admin/games"
 								onClick={() => setIsOpen(false)}
-								className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
+								className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-1"
 								activeProps={{
 									className:
-										"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
+										"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-1",
 								}}
 							>
-								<StickyNote size={20} />
-								<span className="font-medium">Full SSR</span>
+								<Gamepad2 size={20} />
+								<span className="font-medium">Games</span>
 							</Link>
 
 							<Link
-								to="/demo/start/ssr/data-only"
+								to="/admin/teams"
 								onClick={() => setIsOpen(false)}
-								className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
+								className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-1"
 								activeProps={{
 									className:
-										"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
+										"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-1",
 								}}
 							>
-								<StickyNote size={20} />
-								<span className="font-medium">Data Only</span>
+								<Users size={20} />
+								<span className="font-medium">Teams</span>
 							</Link>
 						</div>
-					)}
+					</SignedIn>
 
-					<Link
-						to="/demo/tanstack-query"
-						onClick={() => setIsOpen(false)}
-						className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
-						activeProps={{
-							className:
-								"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
-						}}
-					>
-						<Network size={20} />
-						<span className="font-medium">TanStack Query</span>
-					</Link>
-
-					{/* Demo Links End */}
+					{/* Info Box */}
+					<div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+						<p className="text-sm text-gray-400 mb-2">
+							Ultimate Frisbee live scoreboard with real-time updates and game management.
+						</p>
+						<a
+							href="https://github.com/your-repo/disc-leader"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="text-sm text-cyan-400 hover:text-cyan-300 underline"
+						>
+							View on GitHub →
+						</a>
+					</div>
 				</nav>
 
-				<div className="p-4 border-t border-gray-700 bg-gray-800 flex flex-col gap-2">
+				<div className="p-4 border-t border-gray-700 bg-gray-800">
 					<ClerkHeader />
 				</div>
 			</aside>

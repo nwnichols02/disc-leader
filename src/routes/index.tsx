@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-	Route as RouteIcon,
-	Server,
-	Shield,
-	Sparkles,
-	Waves,
-	Zap,
+	Activity,
+	Clock,
+	Gamepad2,
+	Radio,
+	Smartphone,
+	Users,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: App });
@@ -13,40 +13,40 @@ export const Route = createFileRoute("/")({ component: App });
 function App() {
 	const features = [
 		{
-			icon: <Zap className="w-12 h-12 text-cyan-400" />,
-			title: "Powerful Server Functions",
+			icon: <Radio className="w-12 h-12 text-cyan-400" />,
+			title: "Real-Time Updates",
 			description:
-				"Write server-side code that seamlessly integrates with your client components. Type-safe, secure, and simple.",
+				"Live score tracking with instant updates. No refresh needed. See every goal, turnover, and timeout as it happens.",
 		},
 		{
-			icon: <Server className="w-12 h-12 text-cyan-400" />,
-			title: "Flexible Server Side Rendering",
+			icon: <Gamepad2 className="w-12 h-12 text-cyan-400" />,
+			title: "Multiple Game Formats",
 			description:
-				"Full-document SSR, streaming, and progressive enhancement out of the box. Control exactly what renders where.",
+				"Support for professional (AUDL), tournament (USA Ultimate), and recreational formats. Flexible scoring for any league.",
 		},
 		{
-			icon: <RouteIcon className="w-12 h-12 text-cyan-400" />,
-			title: "API Routes",
+			icon: <Smartphone className="w-12 h-12 text-cyan-400" />,
+			title: "Field-Ready Scorekeeper",
 			description:
-				"Build type-safe API endpoints alongside your application. No separate backend needed.",
+				"Mobile-optimized interface with large touch targets. High contrast for outdoor visibility. Record scores from anywhere on the field.",
 		},
 		{
-			icon: <Shield className="w-12 h-12 text-cyan-400" />,
-			title: "Strongly Typed Everything",
+			icon: <Users className="w-12 h-12 text-cyan-400" />,
+			title: "Team Management",
 			description:
-				"End-to-end type safety from server to client. Catch errors before they reach production.",
+				"Manage teams, rosters, and player information. Track gender ratios for mixed divisions. Complete player statistics.",
 		},
 		{
-			icon: <Waves className="w-12 h-12 text-cyan-400" />,
-			title: "Full Streaming Support",
+			icon: <Activity className="w-12 h-12 text-cyan-400" />,
+			title: "Play-by-Play Tracking",
 			description:
-				"Stream data from server to client progressively. Perfect for AI applications and real-time updates.",
+				"Complete event log with goals, turnovers, and timeouts. Player attribution and timestamps. Immutable audit trail.",
 		},
 		{
-			icon: <Sparkles className="w-12 h-12 text-cyan-400" />,
-			title: "Next Generation Ready",
+			icon: <Clock className="w-12 h-12 text-cyan-400" />,
+			title: "Game Archives",
 			description:
-				"Built from the ground up for modern web applications. Deploy anywhere JavaScript runs.",
+				"Permanent game history with shareable URLs. Browse past games by date, team, or season. Export data for analysis.",
 		},
 	];
 
@@ -55,13 +55,8 @@ function App() {
 			<section className="relative py-20 px-6 text-center overflow-hidden">
 				<div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10"></div>
 				<div className="relative max-w-5xl mx-auto">
-					<div className="flex items-center justify-center gap-6 mb-6">
-						<img
-							src="/tanstack-circle-logo.png"
-							alt="TanStack Logo"
-							className="w-24 h-24 md:w-32 md:h-32"
-						/>
-						<h1 className="text-6xl md:text-7xl font-black text-white [letter-spacing:-0.08em]">
+					<div className="flex items-center justify-center mb-6">
+						<h1 className="text-6xl md:text-8xl font-black text-white [letter-spacing:-0.08em]">
 							<span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
 								DISC
 							</span>
@@ -73,7 +68,8 @@ function App() {
 					</p>
 					<p className="text-lg text-gray-400 max-w-3xl mx-auto mb-8">
 						Real-time game tracking for Ultimate Frisbee. Support for professional,
-						tournament, and recreational formats. Built with TanStack Start and Convex.
+						tournament, and recreational formats. Share games with fans, manage teams,
+						and keep score from the field.
 					</p>
 					<div className="flex flex-col sm:flex-row items-center justify-center gap-4">
 						<a
@@ -83,12 +79,12 @@ function App() {
 							Admin Dashboard
 						</a>
 						<a
-							href="https://tanstack.com/start"
+							href="https://github.com/your-repo/disc-leader"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors"
 						>
-							TanStack Docs
+							View on GitHub
 						</a>
 					</div>
 				</div>

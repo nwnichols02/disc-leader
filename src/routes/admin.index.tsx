@@ -80,14 +80,16 @@ function AdminDashboard() {
         {liveGames.length > 0 ? (
           <div className="divide-y divide-gray-200">
             {liveGames.map((game) => (
-              <Link
+              <div
                 key={game._id}
-                to="/games/$gameId"
-                params={{ gameId: game._id }}
-                className="block px-6 py-4 hover:bg-gray-50 transition-colors"
+                className="px-6 py-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex-1">
+                  <Link
+                    to="/games/$gameId"
+                    params={{ gameId: game._id }}
+                    className="flex-1"
+                  >
                     <div className="flex items-center space-x-3">
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                         <span className="animate-pulse mr-1">●</span>
@@ -102,12 +104,21 @@ function AdminDashboard() {
                         Score: {game.state.homeScore} - {game.state.awayScore}
                       </div>
                     )}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {game.venue}
+                  </Link>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-sm text-gray-500">
+                      {game.venue}
+                    </div>
+                    <Link
+                      to="/admin/scorekeeper/$gameId"
+                      params={{ gameId: game._id }}
+                      className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded transition-colors"
+                    >
+                      Score
+                    </Link>
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         ) : (

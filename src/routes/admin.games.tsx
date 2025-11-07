@@ -170,13 +170,13 @@ function AdminGamesPage() {
                         >
                           View
                         </Link>
-                        {game.status === 'live' && (
+                        {(game.status === 'live' || game.status === 'upcoming') && (
                           <Link
                             to="/admin/scorekeeper/$gameId"
                             params={{ gameId: game._id }}
                             className="text-green-600 hover:text-green-900"
                           >
-                            Score
+                            {game.status === 'live' ? 'Score' : 'Start'}
                           </Link>
                         )}
                       </div>

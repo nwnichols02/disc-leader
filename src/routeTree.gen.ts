@@ -26,6 +26,7 @@ import { Route as DemoFormSimpleRouteImport } from './routes/demo/form.simple'
 import { Route as DemoFormAddressRouteImport } from './routes/demo/form.address'
 import { Route as DemoApiTqTodosRouteImport } from './routes/demo/api.tq-todos'
 import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
+import { Route as AdminScorekeeperGameIdRouteImport } from './routes/admin.scorekeeper.$gameId'
 import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index'
 import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr.spa-mode'
 import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr'
@@ -116,6 +117,11 @@ const DemoApiNamesRoute = DemoApiNamesRouteImport.update({
   path: '/demo/api/names',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminScorekeeperGameIdRoute = AdminScorekeeperGameIdRouteImport.update({
+  id: '/scorekeeper/$gameId',
+  path: '/scorekeeper/$gameId',
+  getParentRoute: () => AdminRoute,
+} as any)
 const DemoStartSsrIndexRoute = DemoStartSsrIndexRouteImport.update({
   id: '/demo/start/ssr/',
   path: '/demo/start/ssr/',
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
   '/demo/form/address': typeof DemoFormAddressRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
   '/demo/form/address': typeof DemoFormAddressRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
   '/demo/form/address': typeof DemoFormAddressRoute
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/demo/tanstack-query'
     | '/games/$gameId'
     | '/admin/'
+    | '/admin/scorekeeper/$gameId'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
     | '/demo/form/address'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/demo/tanstack-query'
     | '/games/$gameId'
     | '/admin'
+    | '/admin/scorekeeper/$gameId'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
     | '/demo/form/address'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/demo/tanstack-query'
     | '/games/$gameId'
     | '/admin/'
+    | '/admin/scorekeeper/$gameId'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
     | '/demo/form/address'
@@ -419,6 +431,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoApiNamesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/scorekeeper/$gameId': {
+      id: '/admin/scorekeeper/$gameId'
+      path: '/scorekeeper/$gameId'
+      fullPath: '/admin/scorekeeper/$gameId'
+      preLoaderRoute: typeof AdminScorekeeperGameIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/demo/start/ssr/': {
       id: '/demo/start/ssr/'
       path: '/demo/start/ssr'
@@ -454,12 +473,14 @@ interface AdminRouteChildren {
   AdminGamesRoute: typeof AdminGamesRoute
   AdminTeamsRoute: typeof AdminTeamsRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminScorekeeperGameIdRoute: typeof AdminScorekeeperGameIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminGamesRoute: AdminGamesRoute,
   AdminTeamsRoute: AdminTeamsRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminScorekeeperGameIdRoute: AdminScorekeeperGameIdRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

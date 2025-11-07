@@ -1,14 +1,17 @@
 # ✅ Create Team Feature - Implementation Complete
 
 **Date**: November 7, 2025  
-**Route**: `/admin/teams`  
-**Status**: ✅ Production Ready
+**Route**: `/admin/teams/new`  
+**Status**: ✅ Production Ready  
+**Implementation**: Dedicated route (not modal)
+
+> **Note**: Originally implemented as a modal, converted to a dedicated route to match game creation pattern. See `TEAM-ROUTE-CONVERSION.md` for details.
 
 ---
 
 ## 🎯 Overview
 
-Comprehensive team creation modal for administrators to create new teams with full branding and division information.
+Comprehensive team creation form at `/admin/teams/new` for administrators to create new teams with full branding and division information.
 
 ---
 

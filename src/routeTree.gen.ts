@@ -16,6 +16,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as GamesGameIdRouteImport } from './routes/games.$gameId'
 import { Route as AdminTeamsRouteImport } from './routes/admin.teams'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
+import { Route as AdminTeamsNewRouteImport } from './routes/admin.teams.new'
 import { Route as AdminScorekeeperGameIdRouteImport } from './routes/admin.scorekeeper.$gameId'
 import { Route as AdminGamesNewRouteImport } from './routes/admin.games.new'
 
@@ -54,6 +55,11 @@ const AdminGamesRoute = AdminGamesRouteImport.update({
   path: '/games',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminTeamsNewRoute = AdminTeamsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminTeamsRoute,
+} as any)
 const AdminScorekeeperGameIdRoute = AdminScorekeeperGameIdRouteImport.update({
   id: '/scorekeeper/$gameId',
   path: '/scorekeeper/$gameId',
@@ -69,34 +75,37 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/admin/games': typeof AdminGamesRouteWithChildren
-  '/admin/teams': typeof AdminTeamsRoute
+  '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/games/$gameId': typeof GamesGameIdRoute
   '/admin/': typeof AdminIndexRoute
   '/games': typeof GamesIndexRoute
   '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
+  '/admin/teams/new': typeof AdminTeamsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin/games': typeof AdminGamesRouteWithChildren
-  '/admin/teams': typeof AdminTeamsRoute
+  '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/games/$gameId': typeof GamesGameIdRoute
   '/admin': typeof AdminIndexRoute
   '/games': typeof GamesIndexRoute
   '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
+  '/admin/teams/new': typeof AdminTeamsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/admin/games': typeof AdminGamesRouteWithChildren
-  '/admin/teams': typeof AdminTeamsRoute
+  '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/games/$gameId': typeof GamesGameIdRoute
   '/admin/': typeof AdminIndexRoute
   '/games/': typeof GamesIndexRoute
   '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
+  '/admin/teams/new': typeof AdminTeamsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
+    | '/admin/teams/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
+    | '/admin/teams/new'
   id:
     | '__root__'
     | '/'
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/games/'
     | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
+    | '/admin/teams/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -191,6 +203,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGamesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/teams/new': {
+      id: '/admin/teams/new'
+      path: '/new'
+      fullPath: '/admin/teams/new'
+      preLoaderRoute: typeof AdminTeamsNewRouteImport
+      parentRoute: typeof AdminTeamsRoute
+    }
     '/admin/scorekeeper/$gameId': {
       id: '/admin/scorekeeper/$gameId'
       path: '/scorekeeper/$gameId'
@@ -220,16 +239,28 @@ const AdminGamesRouteWithChildren = AdminGamesRoute._addFileChildren(
   AdminGamesRouteChildren,
 )
 
+interface AdminTeamsRouteChildren {
+  AdminTeamsNewRoute: typeof AdminTeamsNewRoute
+}
+
+const AdminTeamsRouteChildren: AdminTeamsRouteChildren = {
+  AdminTeamsNewRoute: AdminTeamsNewRoute,
+}
+
+const AdminTeamsRouteWithChildren = AdminTeamsRoute._addFileChildren(
+  AdminTeamsRouteChildren,
+)
+
 interface AdminRouteChildren {
   AdminGamesRoute: typeof AdminGamesRouteWithChildren
-  AdminTeamsRoute: typeof AdminTeamsRoute
+  AdminTeamsRoute: typeof AdminTeamsRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
   AdminScorekeeperGameIdRoute: typeof AdminScorekeeperGameIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminGamesRoute: AdminGamesRouteWithChildren,
-  AdminTeamsRoute: AdminTeamsRoute,
+  AdminTeamsRoute: AdminTeamsRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
   AdminScorekeeperGameIdRoute: AdminScorekeeperGameIdRoute,
 }

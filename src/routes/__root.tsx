@@ -6,6 +6,7 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import type { ConvexClient } from "convex/browser";
 import Header from "../components/Header";
 import ClerkProvider from "../integrations/clerk/provider";
 import ConvexProvider from "../integrations/convex/provider";
@@ -14,6 +15,7 @@ import appCss from "../styles.css?url";
 
 interface MyRouterContext {
 	queryClient: QueryClient;
+	convexClient: ConvexClient;
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({

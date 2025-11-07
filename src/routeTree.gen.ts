@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GamesIndexRouteImport } from './routes/games.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as GamesGameIdRouteImport } from './routes/games.$gameId'
 import { Route as AdminTeamsRouteImport } from './routes/admin.teams'
@@ -26,6 +27,11 @@ const AdminRoute = AdminRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesIndexRoute = GamesIndexRouteImport.update({
+  id: '/games/',
+  path: '/games/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/admin/teams': typeof AdminTeamsRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/games': typeof GamesIndexRoute
   '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
 }
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/admin/teams': typeof AdminTeamsRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/admin': typeof AdminIndexRoute
+  '/games': typeof GamesIndexRoute
   '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
 }
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/admin/teams': typeof AdminTeamsRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/games/': typeof GamesIndexRoute
   '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
 }
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/admin/teams'
     | '/games/$gameId'
     | '/admin/'
+    | '/games'
     | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
   fileRoutesByTo: FileRoutesByTo
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/admin/teams'
     | '/games/$gameId'
     | '/admin'
+    | '/games'
     | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
   id:
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/admin/teams'
     | '/games/$gameId'
     | '/admin/'
+    | '/games/'
     | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
   fileRoutesById: FileRoutesById
@@ -125,6 +137,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   GamesGameIdRoute: typeof GamesGameIdRoute
+  GamesIndexRoute: typeof GamesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -141,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games/': {
+      id: '/games/'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -220,6 +240,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   GamesGameIdRoute: GamesGameIdRoute,
+  GamesIndexRoute: GamesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

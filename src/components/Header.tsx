@@ -78,12 +78,18 @@ export default function Header() {
 							<span className="font-medium">Home</span>
 						</Link>
 
-						{/* TODO: Add Browse Games route when implemented */}
-						<div className="flex items-center gap-3 p-3 rounded-lg text-gray-500 mb-1 cursor-not-allowed">
+						<Link
+							to="/games"
+							onClick={() => setIsOpen(false)}
+							className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-1"
+							activeProps={{
+								className:
+									"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-1",
+							}}
+						>
 							<Search size={20} />
 							<span className="font-medium">Browse Games</span>
-							<span className="text-xs bg-gray-700 px-2 py-0.5 rounded">Coming Soon</span>
-						</div>
+						</Link>
 					</div>
 
 					{/* Sign In Button - Only for Unauthenticated Users */}

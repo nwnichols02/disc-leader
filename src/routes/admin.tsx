@@ -6,12 +6,7 @@
  */
 
 import { useAuth, useUser } from "@clerk/clerk-react";
-import {
-	createFileRoute,
-	Link,
-	Outlet,
-	redirect,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 
 // Check authentication before rendering admin routes
 export const Route = createFileRoute("/admin")({

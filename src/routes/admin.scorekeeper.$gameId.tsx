@@ -62,7 +62,7 @@ function ScorekeeperPage() {
 		api.gameMutations.updatePossession,
 	);
 	const recordTurnoverMutation = useMutation(api.gameMutations.recordTurnover);
-	const updateClockMutation = useMutation(api.gameMutations.updateClock);
+	const _updateClockMutation = useMutation(api.gameMutations.updateClock);
 
 	// Handle goal - Convex provides real-time updates automatically
 	const handleGoal = async (

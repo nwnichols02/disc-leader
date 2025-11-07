@@ -4,7 +4,7 @@
  * List and manage all games with filtering and quick actions
  */
 
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
@@ -14,6 +14,9 @@ export const Route = createFileRoute("/admin/games")({
 });
 
 function AdminGamesPage() {
+	const matches = useMatches();
+	const isOnChildRoute = matches.some(match => match.id === '/admin/games/new');
+
 	const [statusFilter, setStatusFilter] = useState<
 		"all" | "live" | "upcoming" | "completed"
 	>("all");
@@ -28,6 +31,11 @@ function AdminGamesPage() {
 		) ?? [];
 
 	const isPending = games === undefined;
+	
+	// If on a child route (like /new), only render the Outlet
+	if (isOnChildRoute) {
+		return <Outlet />;
+	}
 
 	return (
 		<div className="space-y-6">

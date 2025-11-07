@@ -1,12 +1,11 @@
 import * as Sentry from "@sentry/tanstackstart-react";
 import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
-import * as TanstackQuery from "./integrations/tanstack-query/root-provider";
+import type { ConvexClient } from "convex/browser";
 import { getConvexClient } from "./integrations/convex/provider";
-
+import * as TanstackQuery from "./integrations/tanstack-query/root-provider";
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen";
-import { ConvexClient } from "convex/browser";
 
 // Create a new router instance
 export const getRouter = () => {
@@ -15,7 +14,7 @@ export const getRouter = () => {
 
 	const router = createRouter({
 		routeTree,
-		context: { 
+		context: {
 			...rqContext,
 			convexClient: convexClient as unknown as ConvexClient, // Add Convex client to context for SSR
 		},

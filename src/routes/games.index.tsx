@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
+import { Calendar, Clock, MapPin, Radio, Users } from "lucide-react";
 import { api } from "../../convex/_generated/api";
-import { Clock, MapPin, Users, Radio, Calendar } from "lucide-react";
 import type { Doc } from "../../convex/_generated/dataModel";
 
 export const Route = createFileRoute("/games/")({
@@ -17,7 +17,7 @@ function BrowseGames() {
 		games?.filter((game) => game.status === "upcoming") || [];
 	const completedGames =
 		games?.filter((game) => game.status === "completed") || [];
-	
+
 	const isLoading = games === undefined;
 
 	if (isLoading) {
@@ -187,9 +187,7 @@ function GameCard({ game, isLive, isCompleted }: GameCardProps) {
 					)}
 					{isCompleted && (
 						<div className="px-3 py-1 bg-gray-500/20 border border-gray-500 rounded-full">
-							<span className="text-sm font-semibold text-gray-400">
-								FINAL
-							</span>
+							<span className="text-sm font-semibold text-gray-400">FINAL</span>
 						</div>
 					)}
 
@@ -204,7 +202,9 @@ function GameCard({ game, isLive, isCompleted }: GameCardProps) {
 						<div className="flex items-center gap-3 flex-1">
 							<div
 								className="w-3 h-3 rounded-full"
-								style={{ backgroundColor: game.homeTeam?.primaryColor || "#3b82f6" }}
+								style={{
+									backgroundColor: game.homeTeam?.primaryColor || "#3b82f6",
+								}}
 							/>
 							<span className="text-lg font-semibold text-white truncate">
 								{game.homeTeam?.name || "Home Team"}
@@ -221,7 +221,9 @@ function GameCard({ game, isLive, isCompleted }: GameCardProps) {
 						<div className="flex items-center gap-3 flex-1">
 							<div
 								className="w-3 h-3 rounded-full"
-								style={{ backgroundColor: game.awayTeamId?.primaryColor || "#ef4444" }}
+								style={{
+									backgroundColor: game.awayTeamId?.primaryColor || "#ef4444",
+								}}
 							/>
 							<span className="text-lg font-semibold text-white truncate">
 								{game.awayTeamId?.name || "Away Team"}
@@ -258,7 +260,11 @@ function GameCard({ game, isLive, isCompleted }: GameCardProps) {
 				{/* View Game Link */}
 				<div className="mt-4 pt-4 border-t border-slate-700">
 					<span className="text-cyan-400 group-hover:text-cyan-300 font-medium flex items-center gap-2">
-						{isLive ? "Watch Live" : isCompleted ? "View Results" : "View Details"}
+						{isLive
+							? "Watch Live"
+							: isCompleted
+								? "View Results"
+								: "View Details"}
 						<span className="group-hover:translate-x-1 transition-transform">
 							→
 						</span>
@@ -268,4 +274,3 @@ function GameCard({ game, isLive, isCompleted }: GameCardProps) {
 		</Link>
 	);
 }
-

@@ -67,9 +67,9 @@ function App() {
 						Ultimate Frisbee Live Scoreboard
 					</p>
 					<p className="text-lg text-gray-400 max-w-3xl mx-auto mb-8">
-						Real-time game tracking for Ultimate Frisbee. Support for professional,
-						tournament, and recreational formats. Share games with fans, manage teams,
-						and keep score from the field.
+						Real-time game tracking for Ultimate Frisbee. Support for
+						professional, tournament, and recreational formats. Share games with
+						fans, manage teams, and keep score from the field.
 					</p>
 					<div className="flex flex-col sm:flex-row items-center justify-center gap-4">
 						<a

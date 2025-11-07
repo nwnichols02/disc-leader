@@ -1,3 +1,4 @@
+import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import {
 	Gamepad2,
@@ -9,9 +10,7 @@ import {
 	Users,
 	X,
 } from "lucide-react";
-
 import { useState } from "react";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
 import ClerkHeader from "../integrations/clerk/header-user.tsx";
 
 export default function Header() {
@@ -160,7 +159,8 @@ export default function Header() {
 					{/* Info Box */}
 					<div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
 						<p className="text-sm text-gray-400 mb-2">
-							Ultimate Frisbee live scoreboard with real-time updates and game management.
+							Ultimate Frisbee live scoreboard with real-time updates and game
+							management.
 						</p>
 						<a
 							href="https://github.com/your-repo/disc-leader"

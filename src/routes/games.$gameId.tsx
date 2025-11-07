@@ -8,8 +8,8 @@
  * - Mobile-responsive design for field-side viewing
  */
 
-import { useQuery } from "convex/react"; // Changed to Convex's useQuery
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "convex/react"; // Changed to Convex's useQuery
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { LiveScoreboard } from "../components/LiveScoreboard";
@@ -67,10 +67,11 @@ function GamePage() {
 	});
 
 	// Subscribe to game events (play-by-play)
-	const events = useQuery(api.games.getGameEvents, {
-		gameId: gameId as Id<"games">,
-		limit: 20,
-	}) ?? [];
+	const events =
+		useQuery(api.games.getGameEvents, {
+			gameId: gameId as Id<"games">,
+			limit: 20,
+		}) ?? [];
 
 	// Use SSR data as fallback while real-time subscription loads
 	const displayGame = game ?? initialGame;
@@ -100,7 +101,11 @@ function GamePage() {
 
 			{/* Live Scoreboard */}
 			<main className="max-w-4xl mx-auto px-4 py-6">
-				<LiveScoreboard game={displayGame} gameState={gameState} className="mb-6" />
+				<LiveScoreboard
+					game={displayGame}
+					gameState={gameState}
+					className="mb-6"
+				/>
 
 				{/* Play-by-Play */}
 				<div className="bg-white rounded-lg shadow-sm border border-gray-200">

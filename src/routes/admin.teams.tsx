@@ -14,13 +14,15 @@ export const Route = createFileRoute("/admin/teams")({
 
 function AdminTeamsPage() {
 	const matches = useMatches();
-	const isOnChildRoute = matches.some(match => match.id === '/admin/teams/new');
+	// Check if we're on a child route by seeing if there's a route deeper than /admin/teams
+	const isOnChildRoute = matches.length > 0 && 
+		matches[matches.length - 1].id !== '/admin/teams';
 	
 	// Fetch all teams
 	const teams = useQuery(api.games.listTeams, {}) ?? [];
 	const isPending = teams === undefined;
 	
-	// If on a child route (like /new), only render the Outlet
+	// If on a child route (like /new or /edit), only render the Outlet
 	if (isOnChildRoute) {
 		return <Outlet />;
 	}
@@ -100,14 +102,12 @@ function AdminTeamsPage() {
 									>
 										View Roster
 									</button>
-									<button
-										className="flex-1 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
-										onClick={() =>
-											alert("Edit team functionality coming soon!")
-										}
+									<Link
+										to={`/admin/teams/${team._id}/edit`}
+										className="flex-1 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-colors text-center"
 									>
 										Edit
-									</button>
+									</Link>
 								</div>
 							</div>
 						</div>

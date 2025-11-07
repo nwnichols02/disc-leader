@@ -5,8 +5,7 @@
  */
 
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { convexQuery } from '@convex-dev/react-query'
+import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useState } from 'react'
 
@@ -18,13 +17,14 @@ function AdminGamesPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'live' | 'upcoming' | 'completed'>('all')
   
   // Fetch games based on filter
-  const { data: games = [], isPending } = useQuery(
-    convexQuery(api.games.listGames, 
-      statusFilter === 'all' 
-        ? { limit: 50 }
-        : { status: statusFilter, limit: 50 }
-    )
-  )
+  const games = useQuery(
+    api.games.listGames, 
+    statusFilter === 'all' 
+      ? { limit: 50 }
+      : { status: statusFilter, limit: 50 }
+  ) ?? []
+  
+  const isPending = games === undefined
   
   return (
     <div className="space-y-6">

@@ -5,8 +5,7 @@
  */
 
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { convexQuery } from '@convex-dev/react-query'
+import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 
 export const Route = createFileRoute('/admin/')({
@@ -15,19 +14,13 @@ export const Route = createFileRoute('/admin/')({
 
 function AdminDashboard() {
   // Fetch live games
-  const { data: liveGames = [] } = useQuery(
-    convexQuery(api.games.getLiveGames, {})
-  )
+  const liveGames = useQuery(api.games.getLiveGames, {}) ?? []
   
   // Fetch all games with limit
-  const { data: recentGames = [] } = useQuery(
-    convexQuery(api.games.listGames, { limit: 10 })
-  )
+  const recentGames = useQuery(api.games.listGames, { limit: 10 }) ?? []
   
   // Fetch all teams
-  const { data: teams = [] } = useQuery(
-    convexQuery(api.games.listTeams, {})
-  )
+  const teams = useQuery(api.games.listTeams, {}) ?? []
   
   return (
     <div className="space-y-6">

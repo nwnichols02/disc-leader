@@ -8,8 +8,7 @@
  * - Mobile-responsive design for field-side viewing
  */
 
-import { convexQuery } from "@convex-dev/react-query";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "convex/react"; // Changed to Convex's useQuery
 import { createFileRoute } from "@tanstack/react-router";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -57,43 +56,30 @@ function GamePage() {
 	const { game: initialGame } = Route.useLoaderData();
 
 	// Real-time subscription to game data
-	// Uses SSR data as initial data, then subscribes for live updates
-	const { data: game, isPending } = useQuery({
-		...convexQuery(api.games.getGame, {
-			gameId: gameId as Id<"games">,
-		}),
-		initialData: initialGame,
-		gcTime: 10000, // Keep data for 10s after unmount
+	// Convex handles SSR hydration automatically
+	const game = useQuery(api.games.getGame, {
+		gameId: gameId as Id<"games">,
 	});
 
 	// Subscribe to real-time game state updates
-	const { data: gameState } = useQuery({
-		...convexQuery(api.games.getGameState, {
-			gameId: gameId as Id<"games">,
-		}),
-		initialData: initialGame?.state,
+	const gameState = useQuery(api.games.getGameState, {
+		gameId: gameId as Id<"games">,
 	});
 
 	// Subscribe to game events (play-by-play)
-	const { data: events = [] } = useQuery({
-		...convexQuery(api.games.getGameEvents, {
-			gameId: gameId as Id<"games">,
-			limit: 20,
-		}),
-	});
+	const events = useQuery(api.games.getGameEvents, {
+		gameId: gameId as Id<"games">,
+		limit: 20,
+	}) ?? [];
 
-	if (isPending && !initialGame) {
+	// Use SSR data as fallback while real-time subscription loads
+	const displayGame = game ?? initialGame;
+
+	// Show loading only if we have no data at all
+	if (!displayGame) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
 				<div className="text-lg">Loading game...</div>
-			</div>
-		);
-	}
-
-	if (!game) {
-		return (
-			<div className="flex items-center justify-center min-h-screen">
-				<div className="text-lg text-gray-600">Game not found</div>
 			</div>
 		);
 	}
@@ -104,17 +90,17 @@ function GamePage() {
 			<header className="bg-white border-b border-gray-200 px-4 py-3">
 				<div className="max-w-4xl mx-auto">
 					<h1 className="text-xl font-bold text-gray-900">
-						{game.homeTeam?.name} vs {game.awayTeam?.name}
+						{displayGame.homeTeam?.name} vs {displayGame.awayTeam?.name}
 					</h1>
 					<p className="text-sm text-gray-600 mt-1">
-						{game.venue || "Venue TBA"}
+						{displayGame.venue || "Venue TBA"}
 					</p>
 				</div>
 			</header>
 
 			{/* Live Scoreboard */}
 			<main className="max-w-4xl mx-auto px-4 py-6">
-				<LiveScoreboard game={game} gameState={gameState} className="mb-6" />
+				<LiveScoreboard game={displayGame} gameState={gameState} className="mb-6" />
 
 				{/* Play-by-Play */}
 				<div className="bg-white rounded-lg shadow-sm border border-gray-200">

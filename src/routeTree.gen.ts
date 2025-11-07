@@ -27,6 +27,7 @@ import { Route as DemoFormAddressRouteImport } from './routes/demo/form.address'
 import { Route as DemoApiTqTodosRouteImport } from './routes/demo/api.tq-todos'
 import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
 import { Route as AdminScorekeeperGameIdRouteImport } from './routes/admin.scorekeeper.$gameId'
+import { Route as AdminGamesNewRouteImport } from './routes/admin.games.new'
 import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index'
 import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr.spa-mode'
 import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr'
@@ -122,6 +123,11 @@ const AdminScorekeeperGameIdRoute = AdminScorekeeperGameIdRouteImport.update({
   path: '/scorekeeper/$gameId',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminGamesNewRoute = AdminGamesNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminGamesRoute,
+} as any)
 const DemoStartSsrIndexRoute = DemoStartSsrIndexRouteImport.update({
   id: '/demo/start/ssr/',
   path: '/demo/start/ssr/',
@@ -146,7 +152,7 @@ const DemoStartSsrDataOnlyRoute = DemoStartSsrDataOnlyRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
-  '/admin/games': typeof AdminGamesRoute
+  '/admin/games': typeof AdminGamesRouteWithChildren
   '/admin/teams': typeof AdminTeamsRoute
   '/demo/clerk': typeof DemoClerkRoute
   '/demo/convex': typeof DemoConvexRoute
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
@@ -169,7 +176,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin/games': typeof AdminGamesRoute
+  '/admin/games': typeof AdminGamesRouteWithChildren
   '/admin/teams': typeof AdminTeamsRoute
   '/demo/clerk': typeof DemoClerkRoute
   '/demo/convex': typeof DemoConvexRoute
@@ -177,6 +184,7 @@ export interface FileRoutesByTo {
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
@@ -194,7 +202,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
-  '/admin/games': typeof AdminGamesRoute
+  '/admin/games': typeof AdminGamesRouteWithChildren
   '/admin/teams': typeof AdminTeamsRoute
   '/demo/clerk': typeof DemoClerkRoute
   '/demo/convex': typeof DemoConvexRoute
@@ -202,6 +210,7 @@ export interface FileRoutesById {
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/demo/tanstack-query'
     | '/games/$gameId'
     | '/admin/'
+    | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/demo/tanstack-query'
     | '/games/$gameId'
     | '/admin'
+    | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/demo/tanstack-query'
     | '/games/$gameId'
     | '/admin/'
+    | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
@@ -438,6 +450,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminScorekeeperGameIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/games/new': {
+      id: '/admin/games/new'
+      path: '/new'
+      fullPath: '/admin/games/new'
+      preLoaderRoute: typeof AdminGamesNewRouteImport
+      parentRoute: typeof AdminGamesRoute
+    }
     '/demo/start/ssr/': {
       id: '/demo/start/ssr/'
       path: '/demo/start/ssr'
@@ -469,15 +488,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminGamesRouteChildren {
+  AdminGamesNewRoute: typeof AdminGamesNewRoute
+}
+
+const AdminGamesRouteChildren: AdminGamesRouteChildren = {
+  AdminGamesNewRoute: AdminGamesNewRoute,
+}
+
+const AdminGamesRouteWithChildren = AdminGamesRoute._addFileChildren(
+  AdminGamesRouteChildren,
+)
+
 interface AdminRouteChildren {
-  AdminGamesRoute: typeof AdminGamesRoute
+  AdminGamesRoute: typeof AdminGamesRouteWithChildren
   AdminTeamsRoute: typeof AdminTeamsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminScorekeeperGameIdRoute: typeof AdminScorekeeperGameIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
-  AdminGamesRoute: AdminGamesRoute,
+  AdminGamesRoute: AdminGamesRouteWithChildren,
   AdminTeamsRoute: AdminTeamsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminScorekeeperGameIdRoute: AdminScorekeeperGameIdRoute,

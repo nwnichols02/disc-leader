@@ -5,8 +5,7 @@
  */
 
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { convexQuery } from '@convex-dev/react-query'
+import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 
 export const Route = createFileRoute('/admin/teams')({
@@ -15,9 +14,8 @@ export const Route = createFileRoute('/admin/teams')({
 
 function AdminTeamsPage() {
   // Fetch all teams
-  const { data: teams = [], isPending } = useQuery(
-    convexQuery(api.games.listTeams, {})
-  )
+  const teams = useQuery(api.games.listTeams, {}) ?? []
+  const isPending = teams === undefined
   
   return (
     <div className="space-y-6">

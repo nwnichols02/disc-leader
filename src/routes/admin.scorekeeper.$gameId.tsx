@@ -6,12 +6,11 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
-import { api } from '../../../convex/_generated/api'
-import type { Id } from '../../../convex/_generated/dataModel'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../convex/_generated/api'
+import type { Id } from '../../convex/_generated/dataModel'
 import { useState } from 'react'
-import { LiveScoreboard } from '../../components/LiveScoreboard'
+import { LiveScoreboard } from '../components/LiveScoreboard'
 
 export const Route = createFileRoute('/admin/scorekeeper/$gameId')({
   component: ScorekeeperPage,
@@ -19,223 +18,81 @@ export const Route = createFileRoute('/admin/scorekeeper/$gameId')({
 
 function ScorekeeperPage() {
   const { gameId } = Route.useParams()
-  const queryClient = useQueryClient()
   const [showPlayerSelect, setShowPlayerSelect] = useState(false)
   const [pendingGoal, setPendingGoal] = useState<{ team: 'home' | 'away' } | null>(null)
   
   // Fetch game data with real-time updates
-  const { data: game, isPending: isGamePending } = useQuery(
-    convexQuery(api.games.getGame, { 
-      gameId: gameId as Id<"games"> 
-    })
-  )
+  const game = useQuery(api.games.getGame, { 
+    gameId: gameId as Id<"games"> 
+  })
+  const isGamePending = game === undefined
   
-  const { data: gameState } = useQuery(
-    convexQuery(api.games.getGameState, { 
-      gameId: gameId as Id<"games"> 
-    })
-  )
+  const gameState = useQuery(api.games.getGameState, { 
+    gameId: gameId as Id<"games"> 
+  })
   
   // Get team players for assist selection
-  const { data: homePlayers = [] } = useQuery(
-    convexQuery(api.games.getTeamPlayers, {
-      teamId: game?.homeTeamId as Id<"teams">,
+  const homePlayers = useQuery(
+    api.games.getTeamPlayers,
+    game?.homeTeamId ? {
+      teamId: game.homeTeamId,
       activeOnly: true,
-    }),
-    { enabled: !!game?.homeTeamId }
-  )
+    } : "skip"
+  ) ?? []
   
-  const { data: awayPlayers = [] } = useQuery(
-    convexQuery(api.games.getTeamPlayers, {
-      teamId: game?.awayTeamId as Id<"teams">,
+  const awayPlayers = useQuery(
+    api.games.getTeamPlayers,
+    game?.awayTeamId ? {
+      teamId: game.awayTeamId,
       activeOnly: true,
-    }),
-    { enabled: !!game?.awayTeamId }
-  )
+    } : "skip"
+  ) ?? []
   
-  // Mutations with optimistic updates
-  const recordGoalMutation = useConvexMutation(api.gameMutations.recordGoal)
-  const updatePossessionMutation = useConvexMutation(api.gameMutations.updatePossession)
-  const recordTurnoverMutation = useConvexMutation(api.gameMutations.recordTurnover)
-  const updateClockMutation = useConvexMutation(api.gameMutations.updateClock)
+  // Mutations - Convex handles optimistic updates automatically
+  const recordGoalMutation = useMutation(api.gameMutations.recordGoal)
+  const updatePossessionMutation = useMutation(api.gameMutations.updatePossession)
+  const recordTurnoverMutation = useMutation(api.gameMutations.recordTurnover)
+  const updateClockMutation = useMutation(api.gameMutations.updateClock)
   
-  // Handle goal with optimistic update
+  // Handle goal - Convex provides real-time updates automatically
   const handleGoal = async (team: 'home' | 'away', scoredBy?: Id<"players">) => {
     if (!gameState) return
     
-    const mutation = useMutation({
-      mutationFn: async () => {
-        return await recordGoalMutation({
-          gameId: gameId as Id<"games">,
-          scoringTeam: team,
-          scoredBy,
-        })
-      },
-      
-      // Optimistic update - immediately update UI
-      onMutate: async () => {
-        // Cancel outgoing refetches
-        await queryClient.cancelQueries({ 
-          queryKey: ['convex', 'games.getGameState', { gameId }] 
-        })
-        
-        // Snapshot previous value
-        const previousState = queryClient.getQueryData([
-          'convex', 
-          'games.getGameState', 
-          { gameId }
-        ])
-        
-        // Optimistically update to new value
-        queryClient.setQueryData(
-          ['convex', 'games.getGameState', { gameId }],
-          (old: any) => {
-            if (!old) return old
-            return {
-              ...old,
-              [team === 'home' ? 'homeScore' : 'awayScore']: 
-                old[team === 'home' ? 'homeScore' : 'awayScore'] + 1,
-              possession: team === 'home' ? 'away' : 'home', // Switch possession
-            }
-          }
-        )
-        
-        return { previousState }
-      },
-      
-      // Rollback on error
-      onError: (err, variables, context) => {
-        if (context?.previousState) {
-          queryClient.setQueryData(
-            ['convex', 'games.getGameState', { gameId }],
-            context.previousState
-          )
-        }
-        alert(`Failed to record goal: ${err.message}`)
-      },
-      
-      // Always refetch after success or error
-      onSettled: () => {
-        queryClient.invalidateQueries({ 
-          queryKey: ['convex', 'games.getGameState', { gameId }] 
-        })
-        queryClient.invalidateQueries({ 
-          queryKey: ['convex', 'games.getGameEvents', { gameId }] 
-        })
-      },
-    })
-    
-    await mutation.mutateAsync()
-    setShowPlayerSelect(false)
-    setPendingGoal(null)
+    try {
+      await recordGoalMutation({
+        gameId: gameId as Id<"games">,
+        scoringTeam: team,
+        scoredBy,
+      })
+      setShowPlayerSelect(false)
+      setPendingGoal(null)
+    } catch (err: any) {
+      alert(`Failed to record goal: ${err.message}`)
+    }
   }
   
   // Handle possession change
   const handlePossession = async (newPossession: 'home' | 'away') => {
-    const mutation = useMutation({
-      mutationFn: async () => {
-        return await updatePossessionMutation({
-          gameId: gameId as Id<"games">,
-          possession: newPossession,
-        })
-      },
-      
-      onMutate: async () => {
-        await queryClient.cancelQueries({ 
-          queryKey: ['convex', 'games.getGameState', { gameId }] 
-        })
-        
-        const previousState = queryClient.getQueryData([
-          'convex', 
-          'games.getGameState', 
-          { gameId }
-        ])
-        
-        queryClient.setQueryData(
-          ['convex', 'games.getGameState', { gameId }],
-          (old: any) => old ? { ...old, possession: newPossession } : old
-        )
-        
-        return { previousState }
-      },
-      
-      onError: (err, variables, context) => {
-        if (context?.previousState) {
-          queryClient.setQueryData(
-            ['convex', 'games.getGameState', { gameId }],
-            context.previousState
-          )
-        }
-        alert(`Failed to update possession: ${err.message}`)
-      },
-      
-      onSettled: () => {
-        queryClient.invalidateQueries({ 
-          queryKey: ['convex', 'games.getGameState', { gameId }] 
-        })
-      },
-    })
-    
-    await mutation.mutateAsync()
+    try {
+      await updatePossessionMutation({
+        gameId: gameId as Id<"games">,
+        possession: newPossession,
+      })
+    } catch (err: any) {
+      alert(`Failed to update possession: ${err.message}`)
+    }
   }
   
   // Handle turnover
-  const handleTurnover = async (turnoverType: string) => {
-    const mutation = useMutation({
-      mutationFn: async () => {
-        return await recordTurnoverMutation({
-          gameId: gameId as Id<"games">,
-          turnoverType,
-        })
-      },
-      
-      onMutate: async () => {
-        await queryClient.cancelQueries({ 
-          queryKey: ['convex', 'games.getGameState', { gameId }] 
-        })
-        
-        const previousState = queryClient.getQueryData([
-          'convex', 
-          'games.getGameState', 
-          { gameId }
-        ])
-        
-        // Switch possession on turnover
-        queryClient.setQueryData(
-          ['convex', 'games.getGameState', { gameId }],
-          (old: any) => {
-            if (!old) return old
-            return {
-              ...old,
-              possession: old.possession === 'home' ? 'away' : 'home',
-            }
-          }
-        )
-        
-        return { previousState }
-      },
-      
-      onError: (err, variables, context) => {
-        if (context?.previousState) {
-          queryClient.setQueryData(
-            ['convex', 'games.getGameState', { gameId }],
-            context.previousState
-          )
-        }
-        alert(`Failed to record turnover: ${err.message}`)
-      },
-      
-      onSettled: () => {
-        queryClient.invalidateQueries({ 
-          queryKey: ['convex', 'games.getGameState', { gameId }] 
-        })
-        queryClient.invalidateQueries({ 
-          queryKey: ['convex', 'games.getGameEvents', { gameId }] 
-        })
-      },
-    })
-    
-    await mutation.mutateAsync()
+  const handleTurnover = async (turnoverType: 'drop' | 'throwaway' | 'block' | 'stall' | 'out-of-bounds' | 'other') => {
+    try {
+      await recordTurnoverMutation({
+        gameId: gameId as Id<"games">,
+        turnoverType,
+      })
+    } catch (err: any) {
+      alert(`Failed to record turnover: ${err.message}`)
+    }
   }
   
   if (isGamePending || !game) {

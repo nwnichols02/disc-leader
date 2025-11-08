@@ -4,11 +4,11 @@
  */
 
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useMutation, useQuery } from "convex/react";
+import { AlertCircle, Calendar, MapPin, Settings, Users } from "lucide-react";
 import { useState } from "react";
+import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { Calendar, MapPin, Users, Settings, AlertCircle } from "lucide-react";
 
 export const Route = createFileRoute("/admin/games/new")({
 	component: NewGamePage,
@@ -55,7 +55,7 @@ function NewGamePage() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError("");
-		
+
 		console.log("Form submitted!");
 
 		// Validation
@@ -134,7 +134,7 @@ function NewGamePage() {
 				genderRatioRequired,
 				fieldInfo,
 			});
-			
+
 			const gameId = await createGame({
 				format,
 				homeTeamId: homeTeamId as Id<"teams">,
@@ -153,15 +153,13 @@ function NewGamePage() {
 			navigate({ to: `/admin/scorekeeper/${gameId}` });
 		} catch (err) {
 			console.error("Error creating game:", err);
-			setError(
-				err instanceof Error ? err.message : "Failed to create game",
-			);
+			setError(err instanceof Error ? err.message : "Failed to create game");
 			setIsSubmitting(false);
 		}
 	};
 
 	const isLoading = teams === undefined;
-	
+
 	console.log("Teams loaded:", teams?.length, "teams");
 
 	if (isLoading) {
@@ -178,7 +176,7 @@ function NewGamePage() {
 			</div>
 		);
 	}
-	
+
 	if (teams && teams.length === 0) {
 		return (
 			<div className="max-w-4xl mx-auto px-4 py-8">
@@ -234,7 +232,10 @@ function NewGamePage() {
 					{/* Error Message */}
 					{error && (
 						<div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-start gap-3">
-							<AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
+							<AlertCircle
+								className="text-red-500 flex-shrink-0 mt-0.5"
+								size={20}
+							/>
 							<div>
 								<h3 className="font-semibold text-red-400 mb-1">Error</h3>
 								<p className="text-red-300 text-sm">{error}</p>
@@ -334,7 +335,9 @@ function NewGamePage() {
 								onChange={(e) => setGenderRatioRequired(e.target.checked)}
 								className="w-4 h-4 text-cyan-500 bg-slate-700 border-slate-600 rounded focus:ring-cyan-500"
 							/>
-							<span className="text-sm">Mixed division (gender ratio required)</span>
+							<span className="text-sm">
+								Mixed division (gender ratio required)
+							</span>
 						</label>
 					</div>
 
@@ -342,7 +345,9 @@ function NewGamePage() {
 					<div className="space-y-4">
 						<div className="flex items-center gap-2">
 							<Calendar className="text-cyan-400" size={20} />
-							<h2 className="text-xl font-bold text-white">Schedule & Location</h2>
+							<h2 className="text-xl font-bold text-white">
+								Schedule & Location
+							</h2>
 						</div>
 						<div className="grid md:grid-cols-3 gap-4">
 							<div>
@@ -637,14 +642,17 @@ function NewGamePage() {
 								console.log("isSubmitting:", isSubmitting);
 								console.log("homeTeamId:", homeTeamId);
 								console.log("awayTeamId:", awayTeamId);
-								console.log("Button disabled:", isSubmitting || !homeTeamId || !awayTeamId);
+								console.log(
+									"Button disabled:",
+									isSubmitting || !homeTeamId || !awayTeamId,
+								);
 							}}
 							className="flex-1 px-6 py-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
 						>
 							{isSubmitting ? "Creating Game..." : "Create Game"}
 						</button>
 					</div>
-					
+
 					{/* Debug info */}
 					{(!homeTeamId || !awayTeamId) && (
 						<div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/50 rounded-lg">

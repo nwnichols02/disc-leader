@@ -16,6 +16,18 @@ export const Route = createFileRoute("/admin/games/new")({
 
 type GameFormat = "professional" | "tournament" | "recreational";
 
+/**
+ * Render the admin "Create New Game" page with a form for configuring and creating games.
+ *
+ * The component presents format-specific rule options, optional field dimensions, team selection,
+ * scheduling and venue inputs, validation of required fields, and submits a create-game mutation.
+ * On successful creation it navigates to the game's scorekeeper page.
+ *
+ * @returns The component's JSX element rendering the create-game form and related UI states.
+ *
+ * @example
+ * <Route path="/admin/games/new" component={NewGamePage} />
+ */
 function NewGamePage() {
 	const navigate = useNavigate();
 	const teams = useQuery(api.games.listTeams);

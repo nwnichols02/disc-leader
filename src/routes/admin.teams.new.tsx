@@ -15,6 +15,16 @@ export const Route = createFileRoute("/admin/teams/new")({
 
 type Division = "open" | "womens" | "mixed";
 
+/**
+ * Render the "Create New Team" admin page, including a form to enter team details and submit a create-team request.
+ *
+ * The form collects name, abbreviation, primary/secondary colors, optional division, and optional logo URL; it validates required fields and navigates back to the teams list on successful creation.
+ *
+ * @returns The React element for the New Team page.
+ *
+ * @example
+ * <NewTeamPage />
+ */
 function NewTeamPage() {
 	const navigate = useNavigate();
 	const createTeam = useMutation(api.gameMutations.createTeam);

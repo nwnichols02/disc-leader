@@ -16,6 +16,20 @@ export const Route = createFileRoute("/admin/teams/$teamId/edit")({
 
 type Division = "open" | "womens" | "mixed";
 
+/**
+ * Render the Edit Team admin page that loads a team's data, lets an admin edit branding and division info, validates input, submits updates, and navigates back to the teams list on success.
+ *
+ * The component:
+ * - Fetches the team by `teamId` route param and initializes form fields once.
+ * - Shows a loading state while fetching and a not-found UI when the team is missing.
+ * - Validates that team name and abbreviation are provided and that abbreviation is at most 5 characters.
+ * - Submits updates via the `updateTeam` mutation and displays errors if the update fails.
+ *
+ * @returns The rendered JSX element for the Edit Team page.
+ *
+ * @example
+ * <EditTeamPage />
+ */
 function EditTeamPage() {
 	const { teamId } = Route.useParams();
 	const navigate = useNavigate();

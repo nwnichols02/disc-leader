@@ -17,6 +17,14 @@ export const Route = createFileRoute("/admin/teams")({
 	component: AdminTeamsPage,
 });
 
+/**
+ * Renders the Teams administration page: shows a header, team list with loading and empty states, and actions for each team; if a nested child route is active, renders only the nested Outlet.
+ *
+ * @returns A React element that is the Teams admin UI or the nested route Outlet when on a child route.
+ *
+ * @example
+ * <AdminTeamsPage />
+ */
 function AdminTeamsPage() {
 	const matches = useMatches();
 	// Check if we're on a child route by seeing if there's a route deeper than /admin/teams

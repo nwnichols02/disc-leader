@@ -18,6 +18,25 @@ export const Route = createFileRoute("/admin/games")({
 	component: AdminGamesPage,
 });
 
+/**
+ * Renders the admin "Games" management page with filters, a games list table, and action links.
+ *
+ * When a child route (e.g., "/admin/games/new") is active, only the nested <Outlet /> is rendered.
+ *
+ * The page provides:
+ * - A header with a "Create Game" link.
+ * - Filters for "all", "live", "upcoming", and "completed" games.
+ * - A games table showing status, teams, score, format, venue, date, and actions.
+ * - Per-game actions: a "View" link to the public game page and a conditional "Score"/"Start" link to the admin scorekeeper for live/upcoming games.
+ *
+ * @returns The page's React element (JSX) to display the admin games UI or the nested route Outlet.
+ *
+ * @example
+ * // In route definitions:
+ * <Route path="/admin/games" element={<AdminGamesPage />}>
+ *   <Route path="new" element={<CreateGameForm />} />
+ * </Route>
+ */
 function AdminGamesPage() {
 	const matches = useMatches();
 	const isOnChildRoute = matches.some(

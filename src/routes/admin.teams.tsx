@@ -4,7 +4,12 @@
  * List and manage all teams
  */
 
-import { createFileRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	Outlet,
+	useMatches,
+} from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
@@ -12,16 +17,24 @@ export const Route = createFileRoute("/admin/teams")({
 	component: AdminTeamsPage,
 });
 
+/**
+ * Renders the Teams administration page: shows a header, team list with loading and empty states, and actions for each team; if a nested child route is active, renders only the nested Outlet.
+ *
+ * @returns A React element that is the Teams admin UI or the nested route Outlet when on a child route.
+ *
+ * @example
+ * <AdminTeamsPage />
+ */
 function AdminTeamsPage() {
 	const matches = useMatches();
 	// Check if we're on a child route by seeing if there's a route deeper than /admin/teams
-	const isOnChildRoute = matches.length > 0 && 
-		matches[matches.length - 1].id !== '/admin/teams';
-	
+	const isOnChildRoute =
+		matches.length > 0 && matches[matches.length - 1].id !== "/admin/teams";
+
 	// Fetch all teams
 	const teams = useQuery(api.games.listTeams, {}) ?? [];
 	const isPending = teams === undefined;
-	
+
 	// If on a child route (like /new or /edit), only render the Outlet
 	if (isOnChildRoute) {
 		return <Outlet />;
@@ -72,7 +85,9 @@ function AdminTeamsPage() {
 								<div className="space-y-2 text-sm text-gray-600">
 									<div className="flex items-center space-x-2">
 										<span className="font-medium">Division:</span>
-										<span className="capitalize">{team.division || "Not set"}</span>
+										<span className="capitalize">
+											{team.division || "Not set"}
+										</span>
 									</div>
 
 									<div className="flex items-center space-x-2">

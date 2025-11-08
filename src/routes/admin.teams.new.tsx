@@ -5,9 +5,9 @@
 
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { AlertCircle, Palette, Users } from "lucide-react";
 import { useState } from "react";
-import { Users, Palette, AlertCircle } from "lucide-react";
+import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/admin/teams/new")({
 	component: NewTeamPage,
@@ -15,10 +15,20 @@ export const Route = createFileRoute("/admin/teams/new")({
 
 type Division = "open" | "womens" | "mixed";
 
+/**
+ * Render the "Create New Team" admin page, including a form to enter team details and submit a create-team request.
+ *
+ * The form collects name, abbreviation, primary/secondary colors, optional division, and optional logo URL; it validates required fields and navigates back to the teams list on successful creation.
+ *
+ * @returns The React element for the New Team page.
+ *
+ * @example
+ * <NewTeamPage />
+ */
 function NewTeamPage() {
 	const navigate = useNavigate();
 	const createTeam = useMutation(api.gameMutations.createTeam);
-	
+
 	// Form state
 	const [name, setName] = useState("");
 	const [abbreviation, setAbbreviation] = useState("");
@@ -26,15 +36,15 @@ function NewTeamPage() {
 	const [secondaryColor, setSecondaryColor] = useState("#1e40af");
 	const [division, setDivision] = useState<Division | "">("");
 	const [logo, setLogo] = useState("");
-	
+
 	// UI state
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError("");
-		
+
 		// Validation
 		if (!name.trim()) {
 			setError("Team name is required");
@@ -48,9 +58,9 @@ function NewTeamPage() {
 			setError("Abbreviation must be 5 characters or less");
 			return;
 		}
-		
+
 		setIsSubmitting(true);
-		
+
 		try {
 			await createTeam({
 				name: name.trim(),
@@ -62,7 +72,7 @@ function NewTeamPage() {
 				...(division && { division: division as Division }),
 				...(logo.trim() && { logo: logo.trim() }),
 			});
-			
+
 			// Success - navigate back to teams list
 			navigate({ to: "/admin/teams" });
 		} catch (err) {
@@ -70,7 +80,7 @@ function NewTeamPage() {
 			setIsSubmitting(false);
 		}
 	};
-	
+
 	return (
 		<div className="max-w-4xl mx-auto px-4 py-8">
 			{/* Header */}
@@ -99,25 +109,28 @@ function NewTeamPage() {
 							</p>
 						</div>
 					</div>
-					
+
 					{/* Error Message */}
 					{error && (
 						<div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-start gap-3">
-							<AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
+							<AlertCircle
+								className="text-red-500 flex-shrink-0 mt-0.5"
+								size={20}
+							/>
 							<div>
 								<h3 className="font-semibold text-red-400 mb-1">Error</h3>
 								<p className="text-red-300 text-sm">{error}</p>
 							</div>
 						</div>
 					)}
-					
+
 					{/* Team Information Section */}
 					<div className="space-y-4">
 						<div className="flex items-center gap-2">
 							<Users className="text-cyan-400" size={20} />
 							<h2 className="text-xl font-bold text-white">Team Information</h2>
 						</div>
-						
+
 						<div className="bg-slate-700/50 rounded-lg p-6 space-y-4">
 							{/* Team Name */}
 							<div>
@@ -133,7 +146,7 @@ function NewTeamPage() {
 									required
 								/>
 							</div>
-							
+
 							{/* Abbreviation */}
 							<div>
 								<label className="block text-sm font-medium text-gray-300 mb-2">
@@ -142,7 +155,9 @@ function NewTeamPage() {
 								<input
 									type="text"
 									value={abbreviation}
-									onChange={(e) => setAbbreviation(e.target.value.toUpperCase())}
+									onChange={(e) =>
+										setAbbreviation(e.target.value.toUpperCase())
+									}
 									placeholder="e.g. SFR"
 									maxLength={5}
 									className="w-full px-4 py-3 bg-slate-600 border border-slate-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 uppercase"
@@ -152,7 +167,7 @@ function NewTeamPage() {
 									{abbreviation.length}/5 characters - Used on scoreboards
 								</p>
 							</div>
-							
+
 							{/* Division */}
 							<div>
 								<label className="block text-sm font-medium text-gray-300 mb-2">
@@ -171,21 +186,21 @@ function NewTeamPage() {
 							</div>
 						</div>
 					</div>
-					
+
 					{/* Team Branding Section */}
 					<div className="space-y-4">
 						<div className="flex items-center gap-2">
 							<Palette className="text-cyan-400" size={20} />
 							<h2 className="text-xl font-bold text-white">Team Branding</h2>
 						</div>
-						
+
 						<div className="bg-slate-700/50 rounded-lg p-6 space-y-6">
 							{/* Colors */}
 							<div>
 								<label className="block text-sm font-medium text-gray-300 mb-3">
 									Team Colors *
 								</label>
-								
+
 								<div className="grid md:grid-cols-2 gap-6">
 									{/* Primary Color */}
 									<div>
@@ -207,11 +222,13 @@ function NewTeamPage() {
 													placeholder="#3b82f6"
 													className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded-lg text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cyan-500"
 												/>
-												<p className="mt-1 text-xs text-gray-400">Hex color code</p>
+												<p className="mt-1 text-xs text-gray-400">
+													Hex color code
+												</p>
 											</div>
 										</div>
 									</div>
-									
+
 									{/* Secondary Color */}
 									<div>
 										<label className="block text-xs font-medium text-gray-400 mb-2">
@@ -232,15 +249,19 @@ function NewTeamPage() {
 													placeholder="#1e40af"
 													className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded-lg text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cyan-500"
 												/>
-												<p className="mt-1 text-xs text-gray-400">Hex color code</p>
+												<p className="mt-1 text-xs text-gray-400">
+													Hex color code
+												</p>
 											</div>
 										</div>
 									</div>
 								</div>
-								
+
 								{/* Color Preview */}
 								<div className="mt-6">
-									<p className="text-sm font-medium text-gray-300 mb-3">Preview</p>
+									<p className="text-sm font-medium text-gray-300 mb-3">
+										Preview
+									</p>
 									<div
 										className="h-32 rounded-lg flex items-center justify-center text-white text-4xl font-bold shadow-lg border border-slate-600"
 										style={{
@@ -254,7 +275,7 @@ function NewTeamPage() {
 									</p>
 								</div>
 							</div>
-							
+
 							{/* Logo URL */}
 							<div>
 								<label className="block text-sm font-medium text-gray-300 mb-2">
@@ -273,7 +294,7 @@ function NewTeamPage() {
 							</div>
 						</div>
 					</div>
-					
+
 					{/* Submit Buttons */}
 					<div className="flex gap-4 pt-6 border-t border-slate-700">
 						<Link
@@ -295,4 +316,3 @@ function NewTeamPage() {
 		</div>
 	);
 }
-

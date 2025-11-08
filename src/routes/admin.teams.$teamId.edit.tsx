@@ -4,10 +4,10 @@
  */
 
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import { AlertCircle, Loader2, Palette, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 import { api } from "../../convex/_generated/api";
-import { useState, useEffect } from "react";
-import { Users, Palette, AlertCircle, Loader2 } from "lucide-react";
 import type { Id } from "../../convex/_generated/dataModel";
 
 export const Route = createFileRoute("/admin/teams/$teamId/edit")({
@@ -16,14 +16,28 @@ export const Route = createFileRoute("/admin/teams/$teamId/edit")({
 
 type Division = "open" | "womens" | "mixed";
 
+/**
+ * Render the Edit Team admin page that loads a team's data, lets an admin edit branding and division info, validates input, submits updates, and navigates back to the teams list on success.
+ *
+ * The component:
+ * - Fetches the team by `teamId` route param and initializes form fields once.
+ * - Shows a loading state while fetching and a not-found UI when the team is missing.
+ * - Validates that team name and abbreviation are provided and that abbreviation is at most 5 characters.
+ * - Submits updates via the `updateTeam` mutation and displays errors if the update fails.
+ *
+ * @returns The rendered JSX element for the Edit Team page.
+ *
+ * @example
+ * <EditTeamPage />
+ */
 function EditTeamPage() {
 	const { teamId } = Route.useParams();
 	const navigate = useNavigate();
 	const updateTeam = useMutation(api.gameMutations.updateTeam);
-	
+
 	// Fetch the existing team data
 	const team = useQuery(api.games.getTeam, { teamId: teamId as Id<"teams"> });
-	
+
 	// Form state
 	const [name, setName] = useState("");
 	const [abbreviation, setAbbreviation] = useState("");
@@ -31,12 +45,12 @@ function EditTeamPage() {
 	const [secondaryColor, setSecondaryColor] = useState("#1e40af");
 	const [division, setDivision] = useState<Division | "">("");
 	const [logo, setLogo] = useState("");
-	
+
 	// UI state
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isInitialized, setIsInitialized] = useState(false);
-	
+
 	// Initialize form with team data when loaded
 	useEffect(() => {
 		if (team && !isInitialized) {
@@ -49,11 +63,11 @@ function EditTeamPage() {
 			setIsInitialized(true);
 		}
 	}, [team, isInitialized]);
-	
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError("");
-		
+
 		// Validation
 		if (!name.trim()) {
 			setError("Team name is required");
@@ -67,9 +81,9 @@ function EditTeamPage() {
 			setError("Abbreviation must be 5 characters or less");
 			return;
 		}
-		
+
 		setIsSubmitting(true);
-		
+
 		try {
 			await updateTeam({
 				teamId: teamId as Id<"teams">,
@@ -82,7 +96,7 @@ function EditTeamPage() {
 				...(division && { division: division as Division }),
 				...(logo.trim() && { logo: logo.trim() }),
 			});
-			
+
 			// Success - navigate back to teams list
 			navigate({ to: "/admin/teams" });
 		} catch (err) {
@@ -90,7 +104,7 @@ function EditTeamPage() {
 			setIsSubmitting(false);
 		}
 	};
-	
+
 	// Loading state
 	if (team === undefined) {
 		return (
@@ -101,7 +115,7 @@ function EditTeamPage() {
 			</div>
 		);
 	}
-	
+
 	// Team not found
 	if (team === null) {
 		return (
@@ -130,7 +144,7 @@ function EditTeamPage() {
 			</div>
 		);
 	}
-	
+
 	return (
 		<div className="max-w-4xl mx-auto px-4 py-8">
 			{/* Header */}
@@ -151,33 +165,34 @@ function EditTeamPage() {
 							<Users className="text-cyan-400" size={28} />
 						</div>
 						<div>
-							<h1 className="text-3xl font-bold text-white mb-2">
-								Edit Team
-							</h1>
+							<h1 className="text-3xl font-bold text-white mb-2">Edit Team</h1>
 							<p className="text-gray-400">
 								Update team branding and division info
 							</p>
 						</div>
 					</div>
-					
+
 					{/* Error Message */}
 					{error && (
 						<div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-start gap-3">
-							<AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
+							<AlertCircle
+								className="text-red-500 flex-shrink-0 mt-0.5"
+								size={20}
+							/>
 							<div>
 								<h3 className="font-semibold text-red-400 mb-1">Error</h3>
 								<p className="text-red-300 text-sm">{error}</p>
 							</div>
 						</div>
 					)}
-					
+
 					{/* Team Information Section */}
 					<div className="space-y-4">
 						<div className="flex items-center gap-2">
 							<Users className="text-cyan-400" size={20} />
 							<h2 className="text-xl font-bold text-white">Team Information</h2>
 						</div>
-						
+
 						<div className="bg-slate-700/50 rounded-lg p-6 space-y-4">
 							{/* Team Name */}
 							<div>
@@ -193,7 +208,7 @@ function EditTeamPage() {
 									required
 								/>
 							</div>
-							
+
 							{/* Abbreviation */}
 							<div>
 								<label className="block text-sm font-medium text-gray-300 mb-2">
@@ -202,7 +217,9 @@ function EditTeamPage() {
 								<input
 									type="text"
 									value={abbreviation}
-									onChange={(e) => setAbbreviation(e.target.value.toUpperCase())}
+									onChange={(e) =>
+										setAbbreviation(e.target.value.toUpperCase())
+									}
 									placeholder="e.g. SFR"
 									maxLength={5}
 									className="w-full px-4 py-3 bg-slate-600 border border-slate-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 uppercase"
@@ -212,7 +229,7 @@ function EditTeamPage() {
 									{abbreviation.length}/5 characters - Used on scoreboards
 								</p>
 							</div>
-							
+
 							{/* Division */}
 							<div>
 								<label className="block text-sm font-medium text-gray-300 mb-2">
@@ -231,21 +248,21 @@ function EditTeamPage() {
 							</div>
 						</div>
 					</div>
-					
+
 					{/* Team Branding Section */}
 					<div className="space-y-4">
 						<div className="flex items-center gap-2">
 							<Palette className="text-cyan-400" size={20} />
 							<h2 className="text-xl font-bold text-white">Team Branding</h2>
 						</div>
-						
+
 						<div className="bg-slate-700/50 rounded-lg p-6 space-y-6">
 							{/* Colors */}
 							<div>
 								<label className="block text-sm font-medium text-gray-300 mb-3">
 									Team Colors *
 								</label>
-								
+
 								<div className="grid md:grid-cols-2 gap-6">
 									{/* Primary Color */}
 									<div>
@@ -267,11 +284,13 @@ function EditTeamPage() {
 													placeholder="#3b82f6"
 													className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded-lg text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cyan-500"
 												/>
-												<p className="mt-1 text-xs text-gray-400">Hex color code</p>
+												<p className="mt-1 text-xs text-gray-400">
+													Hex color code
+												</p>
 											</div>
 										</div>
 									</div>
-									
+
 									{/* Secondary Color */}
 									<div>
 										<label className="block text-xs font-medium text-gray-400 mb-2">
@@ -292,15 +311,19 @@ function EditTeamPage() {
 													placeholder="#1e40af"
 													className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded-lg text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cyan-500"
 												/>
-												<p className="mt-1 text-xs text-gray-400">Hex color code</p>
+												<p className="mt-1 text-xs text-gray-400">
+													Hex color code
+												</p>
 											</div>
 										</div>
 									</div>
 								</div>
-								
+
 								{/* Color Preview */}
 								<div className="mt-6">
-									<p className="text-sm font-medium text-gray-300 mb-3">Preview</p>
+									<p className="text-sm font-medium text-gray-300 mb-3">
+										Preview
+									</p>
 									<div
 										className="h-32 rounded-lg flex items-center justify-center text-white text-4xl font-bold shadow-lg border border-slate-600"
 										style={{
@@ -314,7 +337,7 @@ function EditTeamPage() {
 									</p>
 								</div>
 							</div>
-							
+
 							{/* Logo URL */}
 							<div>
 								<label className="block text-sm font-medium text-gray-300 mb-2">
@@ -333,7 +356,7 @@ function EditTeamPage() {
 							</div>
 						</div>
 					</div>
-					
+
 					{/* Submit Buttons */}
 					<div className="flex gap-4 pt-6 border-t border-slate-700">
 						<Link
@@ -355,4 +378,3 @@ function EditTeamPage() {
 		</div>
 	);
 }
-

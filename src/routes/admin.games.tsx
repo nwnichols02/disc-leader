@@ -4,7 +4,12 @@
  * List and manage all games with filtering and quick actions
  */
 
-import { createFileRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	Outlet,
+	useMatches,
+} from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
@@ -13,9 +18,30 @@ export const Route = createFileRoute("/admin/games")({
 	component: AdminGamesPage,
 });
 
+/**
+ * Renders the admin "Games" management page with filters, a games list table, and action links.
+ *
+ * When a child route (e.g., "/admin/games/new") is active, only the nested <Outlet /> is rendered.
+ *
+ * The page provides:
+ * - A header with a "Create Game" link.
+ * - Filters for "all", "live", "upcoming", and "completed" games.
+ * - A games table showing status, teams, score, format, venue, date, and actions.
+ * - Per-game actions: a "View" link to the public game page and a conditional "Score"/"Start" link to the admin scorekeeper for live/upcoming games.
+ *
+ * @returns The page's React element (JSX) to display the admin games UI or the nested route Outlet.
+ *
+ * @example
+ * // In route definitions:
+ * <Route path="/admin/games" element={<AdminGamesPage />}>
+ *   <Route path="new" element={<CreateGameForm />} />
+ * </Route>
+ */
 function AdminGamesPage() {
 	const matches = useMatches();
-	const isOnChildRoute = matches.some(match => match.id === '/admin/games/new');
+	const isOnChildRoute = matches.some(
+		(match) => match.id === "/admin/games/new",
+	);
 
 	const [statusFilter, setStatusFilter] = useState<
 		"all" | "live" | "upcoming" | "completed"
@@ -31,7 +57,7 @@ function AdminGamesPage() {
 		) ?? [];
 
 	const isPending = games === undefined;
-	
+
 	// If on a child route (like /new), only render the Outlet
 	if (isOnChildRoute) {
 		return <Outlet />;
@@ -177,27 +203,50 @@ function AdminGamesPage() {
 												{formatDateTime(game.scheduledStart)}
 											</div>
 										</td>
-										<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-											<div className="flex justify-end space-x-2">
+									<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+										<div className="flex justify-end items-center gap-2">
+											<Link
+												to="/games/$gameId"
+												params={{ gameId: game._id }}
+												className="inline-flex items-center justify-center w-24 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+											>
+												<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+												</svg>
+												View
+											</Link>
+											{(game.status === "live" ||
+												game.status === "upcoming") && (
 												<Link
-													to="/games/$gameId"
+													to="/admin/scorekeeper/$gameId"
 													params={{ gameId: game._id }}
-													className="text-blue-600 hover:text-blue-900"
+													className={`inline-flex items-center justify-center w-24 px-3 py-1.5 text-white text-sm font-medium rounded-md transition-colors shadow-sm ${
+														game.status === "live"
+															? "bg-green-600 hover:bg-green-700"
+															: "bg-purple-600 hover:bg-purple-700"
+													}`}
 												>
-													View
+													{game.status === "live" ? (
+														<>
+															<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+															</svg>
+															Score
+														</>
+													) : (
+														<>
+															<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+															</svg>
+															Start
+														</>
+													)}
 												</Link>
-												{(game.status === "live" ||
-													game.status === "upcoming") && (
-													<Link
-														to="/admin/scorekeeper/$gameId"
-														params={{ gameId: game._id }}
-														className="text-green-600 hover:text-green-900"
-													>
-														{game.status === "live" ? "Score" : "Start"}
-													</Link>
-												)}
-											</div>
-										</td>
+											)}
+										</div>
+									</td>
 									</tr>
 								))}
 							</tbody>

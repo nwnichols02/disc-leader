@@ -1,6 +1,7 @@
 import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import {
+	CreditCard,
 	Gamepad2,
 	Home,
 	LayoutDashboard,
@@ -11,6 +12,7 @@ import {
 	X,
 } from "lucide-react";
 import { useState } from "react";
+import { PaymentAlert } from "./autumn/PaymentAlert";
 import ClerkHeader from "../integrations/clerk/header-user.tsx";
 
 export default function Header() {
@@ -59,6 +61,13 @@ export default function Header() {
 				</div>
 
 				<nav className="flex-1 p-4 overflow-y-auto">
+					{/* Payment Alert */}
+					<SignedIn>
+						<div className="mb-4">
+							<PaymentAlert />
+						</div>
+					</SignedIn>
+
 					{/* Public Links - Always Visible */}
 					<div className="mb-6">
 						<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-3">
@@ -88,6 +97,19 @@ export default function Header() {
 						>
 							<Search size={20} />
 							<span className="font-medium">Browse Games</span>
+						</Link>
+
+						<Link
+							to="/pricing"
+							onClick={() => setIsOpen(false)}
+							className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-1"
+							activeProps={{
+								className:
+									"flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-1",
+							}}
+						>
+							<CreditCard size={20} />
+							<span className="font-medium">Pricing</span>
 						</Link>
 					</div>
 

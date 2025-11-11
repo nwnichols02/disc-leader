@@ -6,6 +6,8 @@
 
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
+import { UpgradeButton } from "@/components/autumn/UpgradeButton";
+import { useFeatureAccess } from "@/utils/feature-gates";
 import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/admin/")({
@@ -13,6 +15,8 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function AdminDashboard() {
+	const { isFree, isPro, isPremium, maxGames, maxTeams } = useFeatureAccess();
+	
 	// Fetch live games
 	const liveGames = useQuery(api.games.getLiveGames, {}) ?? [];
 
@@ -22,8 +26,53 @@ function AdminDashboard() {
 	// Fetch all teams
 	const teams = useQuery(api.games.listTeams, {}) ?? [];
 
+	const isNearGameLimit = isFree && recentGames.length >= maxGames - 1;
+	const isAtGameLimit = isFree && recentGames.length >= maxGames;
+	const isNearTeamLimit = isFree && teams.length >= maxTeams - 1;
+
 	return (
 		<div className="space-y-6">
+			{/* Upgrade Banner for Free Tier */}
+			{isFree && (isNearGameLimit || isNearTeamLimit) && (
+				<div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg shadow-lg p-6 text-white">
+					<div className="flex items-center justify-between">
+						<div className="flex-1">
+							<h3 className="text-xl font-bold mb-2">
+								{isAtGameLimit ? "Limit Reached!" : "Almost There!"}
+							</h3>
+							<p className="text-blue-100 mb-4">
+								{isAtGameLimit
+									? `You've reached your limit of ${maxGames} games on the free plan.`
+									: `You're using ${recentGames.length}/${maxGames} games and ${teams.length}/${maxTeams} teams.`}
+								{" "}Upgrade to Pro for unlimited games and teams!
+							</p>
+							<ul className="text-sm text-blue-100 space-y-1 mb-4">
+								<li>✓ Unlimited games and teams</li>
+								<li>✓ Live scoreboard access</li>
+								<li>✓ Advanced analytics</li>
+							</ul>
+						</div>
+						<div className="ml-6">
+							<UpgradeButton productId="pro" variant="secondary" size="lg" />
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Subscription Status */}
+			{(isPro || isPremium) && (
+				<div className="bg-green-50 border border-green-200 rounded-lg p-4">
+					<div className="flex items-center gap-3">
+						<svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+							<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+						</svg>
+						<span className="font-semibold text-green-800">
+							{isPremium ? "Premium" : "Pro"} Member - Thank you for your support!
+						</span>
+					</div>
+				</div>
+			)}
+
 			{/* Page Header */}
 			<div className="flex justify-between items-center">
 				<div>
@@ -34,7 +83,12 @@ function AdminDashboard() {
 				</div>
 				<Link
 					to="/admin/games/new"
-					className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+					className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors font-medium ${
+						isAtGameLimit
+							? "bg-gray-400 text-gray-200 cursor-not-allowed"
+							: "bg-blue-600 text-white hover:bg-blue-700"
+					}`}
+					disabled={isAtGameLimit}
 				>
 					+ Create Game
 				</Link>

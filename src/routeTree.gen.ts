@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GamesIndexRouteImport } from './routes/games.index'
@@ -16,11 +17,17 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as GamesGameIdRouteImport } from './routes/games.$gameId'
 import { Route as AdminTeamsRouteImport } from './routes/admin.teams'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
+import { Route as ApiAutumnSplatRouteImport } from './routes/api.autumn.$'
 import { Route as AdminTeamsNewRouteImport } from './routes/admin.teams.new'
 import { Route as AdminScorekeeperGameIdRouteImport } from './routes/admin.scorekeeper.$gameId'
 import { Route as AdminGamesNewRouteImport } from './routes/admin.games.new'
 import { Route as AdminTeamsTeamIdEditRouteImport } from './routes/admin.teams.$teamId.edit'
 
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -56,6 +63,11 @@ const AdminGamesRoute = AdminGamesRouteImport.update({
   path: '/games',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiAutumnSplatRoute = ApiAutumnSplatRouteImport.update({
+  id: '/api/autumn/$',
+  path: '/api/autumn/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminTeamsNewRoute = AdminTeamsNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -80,6 +92,7 @@ const AdminTeamsTeamIdEditRoute = AdminTeamsTeamIdEditRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/pricing': typeof PricingRoute
   '/admin/games': typeof AdminGamesRouteWithChildren
   '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/games/$gameId': typeof GamesGameIdRoute
@@ -88,10 +101,12 @@ export interface FileRoutesByFullPath {
   '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
   '/admin/teams/new': typeof AdminTeamsNewRoute
+  '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/admin/teams/$teamId/edit': typeof AdminTeamsTeamIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/pricing': typeof PricingRoute
   '/admin/games': typeof AdminGamesRouteWithChildren
   '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/games/$gameId': typeof GamesGameIdRoute
@@ -100,12 +115,14 @@ export interface FileRoutesByTo {
   '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
   '/admin/teams/new': typeof AdminTeamsNewRoute
+  '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/admin/teams/$teamId/edit': typeof AdminTeamsTeamIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/pricing': typeof PricingRoute
   '/admin/games': typeof AdminGamesRouteWithChildren
   '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/games/$gameId': typeof GamesGameIdRoute
@@ -114,6 +131,7 @@ export interface FileRoutesById {
   '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
   '/admin/teams/new': typeof AdminTeamsNewRoute
+  '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/admin/teams/$teamId/edit': typeof AdminTeamsTeamIdEditRoute
 }
 export interface FileRouteTypes {
@@ -121,6 +139,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/pricing'
     | '/admin/games'
     | '/admin/teams'
     | '/games/$gameId'
@@ -129,10 +148,12 @@ export interface FileRouteTypes {
     | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
     | '/admin/teams/new'
+    | '/api/autumn/$'
     | '/admin/teams/$teamId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/pricing'
     | '/admin/games'
     | '/admin/teams'
     | '/games/$gameId'
@@ -141,11 +162,13 @@ export interface FileRouteTypes {
     | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
     | '/admin/teams/new'
+    | '/api/autumn/$'
     | '/admin/teams/$teamId/edit'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/pricing'
     | '/admin/games'
     | '/admin/teams'
     | '/games/$gameId'
@@ -154,18 +177,28 @@ export interface FileRouteTypes {
     | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
     | '/admin/teams/new'
+    | '/api/autumn/$'
     | '/admin/teams/$teamId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  PricingRoute: typeof PricingRoute
   GamesGameIdRoute: typeof GamesGameIdRoute
   GamesIndexRoute: typeof GamesIndexRoute
+  ApiAutumnSplatRoute: typeof ApiAutumnSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -214,6 +247,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/games'
       preLoaderRoute: typeof AdminGamesRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/api/autumn/$': {
+      id: '/api/autumn/$'
+      path: '/api/autumn/$'
+      fullPath: '/api/autumn/$'
+      preLoaderRoute: typeof ApiAutumnSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/teams/new': {
       id: '/admin/teams/new'
@@ -291,8 +331,10 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  PricingRoute: PricingRoute,
   GamesGameIdRoute: GamesGameIdRoute,
   GamesIndexRoute: GamesIndexRoute,
+  ApiAutumnSplatRoute: ApiAutumnSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

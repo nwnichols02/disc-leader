@@ -16,7 +16,7 @@ export const Route = createFileRoute("/admin/")({
 
 function AdminDashboard() {
 	const { isFree, isPro, isPremium, maxGames, maxTeams } = useFeatureAccess();
-	
+
 	// Fetch live games
 	const liveGames = useQuery(api.games.getLiveGames, {}) ?? [];
 
@@ -43,8 +43,8 @@ function AdminDashboard() {
 							<p className="text-blue-100 mb-4">
 								{isAtGameLimit
 									? `You've reached your limit of ${maxGames} games on the free plan.`
-									: `You're using ${recentGames.length}/${maxGames} games and ${teams.length}/${maxTeams} teams.`}
-								{" "}Upgrade to Pro for unlimited games and teams!
+									: `You're using ${recentGames.length}/${maxGames} games and ${teams.length}/${maxTeams} teams.`}{" "}
+								Upgrade to Pro for unlimited games and teams!
 							</p>
 							<ul className="text-sm text-blue-100 space-y-1 mb-4">
 								<li>✓ Unlimited games and teams</li>
@@ -63,11 +63,20 @@ function AdminDashboard() {
 			{(isPro || isPremium) && (
 				<div className="bg-green-50 border border-green-200 rounded-lg p-4">
 					<div className="flex items-center gap-3">
-						<svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-							<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+						<svg
+							className="w-6 h-6 text-green-600"
+							fill="currentColor"
+							viewBox="0 0 20 20"
+						>
+							<path
+								fillRule="evenodd"
+								d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+								clipRule="evenodd"
+							/>
 						</svg>
 						<span className="font-semibold text-green-800">
-							{isPremium ? "Premium" : "Pro"} Member - Thank you for your support!
+							{isPremium ? "Premium" : "Pro"} Member - Thank you for your
+							support!
 						</span>
 					</div>
 				</div>

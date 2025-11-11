@@ -12,8 +12,8 @@ import {
 	X,
 } from "lucide-react";
 import { useState } from "react";
-import { PaymentAlert } from "./autumn/PaymentAlert";
 import ClerkHeader from "../integrations/clerk/header-user.tsx";
+import { PaymentAlert } from "./autumn/PaymentAlert";
 
 export default function Header() {
 	const [isOpen, setIsOpen] = useState(false);
@@ -185,7 +185,7 @@ export default function Header() {
 							management.
 						</p>
 						<a
-							href="https://github.com/your-repo/disc-leader"
+							href="https://github.com/nwnichols02/disc-leader"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="text-sm text-cyan-400 hover:text-cyan-300 underline"

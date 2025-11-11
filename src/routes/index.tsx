@@ -79,7 +79,7 @@ function App() {
 							Admin Dashboard
 						</a>
 						<a
-							href="https://github.com/your-repo/disc-leader"
+							href="https://github.com/nwnichols02/disc-leader"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors"

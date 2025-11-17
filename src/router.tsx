@@ -40,14 +40,20 @@ export const getRouter = () => {
 			dsn: env.VITE_SENTRY_DSN,
 			environment: import.meta.env.MODE || "development",
 			// Error collection is automatic with @sentry/tanstackstart-react
-			integrations: [Sentry.replayIntegration()],
+			integrations: [Sentry.replayIntegration({
+				// Disable all masking - no PII or sensitive data
+				mask: [],
+				block: [],
+				maskAllText: false,
+				maskAllInputs: false,
+			})],
 			// Capture Replay for 10% of all sessions,
 			// plus for 100% of sessions with an error.
-			replaysSessionSampleRate: 0.1,
+			replaysSessionSampleRate: 1.0,
 			replaysOnErrorSampleRate: 1.0,
 			// Adds request headers and IP for users, for more info visit:
 			// https://docs.sentry.io/platforms/javascript/guides/tanstackstart-react/configuration/options/#sendDefaultPii
-			sendDefaultPii: true,
+			sendDefaultPii: false,
 		});
 	}
 

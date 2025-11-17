@@ -33,12 +33,12 @@ export const getRouter = () => {
 		queryClient: rqContext.queryClient,
 	});
 
-	if (!router.isServer) {
-		Sentry.init({
-			dsn: import.meta.env.VITE_SENTRY_DSN,
-			integrations: [],
-		});
-	}
+	// if (!router.isServer) {
+	// 	Sentry.init({
+	// 		dsn: import.meta.env.VITE_SENTRY_DSN,
+	// 		integrations: [],
+	// 	});
+	// }
 
 	return router;
 };

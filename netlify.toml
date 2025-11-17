@@ -1,6 +1,13 @@
 [build]
   command = "vite build"
   publish = "dist/client"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+[context.deploy-preview]
+  command = "bash -lc \"echo 'Building preview (skipping Convex deploy)...' && bun run build && echo '🎉 Preview build completed successfully'\""
+
 [dev]
   command = "vite dev"
   port = 3000

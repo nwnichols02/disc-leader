@@ -8,9 +8,11 @@
  * @module
  */
 
+import type * as firecrawl from "../firecrawl.js";
 import type * as gameMutations from "../gameMutations.js";
 import type * as games from "../games.js";
 import type * as seed from "../seed.js";
+import type * as teamImports from "../teamImports.js";
 
 import type {
   ApiFromModules,
@@ -27,9 +29,11 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  firecrawl: typeof firecrawl;
   gameMutations: typeof gameMutations;
   games: typeof games;
   seed: typeof seed;
+  teamImports: typeof teamImports;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

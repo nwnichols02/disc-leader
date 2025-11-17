@@ -17,6 +17,7 @@
     "@clerk/tanstack-react-start": "^0.27.1",
     "@convex-dev/react-query": "0.0.0-alpha.11",
     "@faker-js/faker": "^10.0.0",
+    "@mendable/firecrawl-js": "^4.5.0",
     "@netlify/vite-plugin-tanstack-start": "^1.0.2",
     "@sentry/tanstackstart-react": "^10.25.0",
     "@t3-oss/env-core": "^0.13.8",

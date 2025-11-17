@@ -12,6 +12,7 @@ import {
 } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Id } from "convex/_generated/dataModel";
 
 export const Route = createFileRoute("/admin/teams")({
 	component: AdminTeamsPage,
@@ -48,12 +49,20 @@ function AdminTeamsPage() {
 					<h2 className="text-2xl font-bold text-gray-900">Teams</h2>
 					<p className="text-gray-600 mt-1">Manage teams and rosters</p>
 				</div>
-				<Link
-					to="/admin/teams/new"
-					className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-				>
-					+ Create Team
-				</Link>
+				<div className="flex gap-3">
+					<Link
+						to="/admin/teams/import"
+						className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+					>
+						Import Teams
+					</Link>
+					<Link
+						to="/admin/teams/new"
+						className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+					>
+						+ Create Team
+					</Link>
+				</div>
 			</div>
 
 			{/* Teams Grid */}
@@ -118,7 +127,7 @@ function AdminTeamsPage() {
 										View Roster
 									</button>
 									<Link
-										to={`/admin/teams/${team._id}/edit`}
+										to={`/admin/teams/${team._id as Id<"teams">}/edit` as any}
 										className="flex-1 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-colors text-center"
 									>
 										Edit

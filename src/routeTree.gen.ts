@@ -19,6 +19,7 @@ import { Route as AdminTeamsRouteImport } from './routes/admin.teams'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
 import { Route as ApiAutumnSplatRouteImport } from './routes/api.autumn.$'
 import { Route as AdminTeamsNewRouteImport } from './routes/admin.teams.new'
+import { Route as AdminTeamsImportRouteImport } from './routes/admin.teams.import'
 import { Route as AdminScorekeeperGameIdRouteImport } from './routes/admin.scorekeeper.$gameId'
 import { Route as AdminGamesNewRouteImport } from './routes/admin.games.new'
 import { Route as AdminTeamsTeamIdEditRouteImport } from './routes/admin.teams.$teamId.edit'
@@ -73,6 +74,11 @@ const AdminTeamsNewRoute = AdminTeamsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AdminTeamsRoute,
 } as any)
+const AdminTeamsImportRoute = AdminTeamsImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => AdminTeamsRoute,
+} as any)
 const AdminScorekeeperGameIdRoute = AdminScorekeeperGameIdRouteImport.update({
   id: '/scorekeeper/$gameId',
   path: '/scorekeeper/$gameId',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/games': typeof GamesIndexRoute
   '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
+  '/admin/teams/import': typeof AdminTeamsImportRoute
   '/admin/teams/new': typeof AdminTeamsNewRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/admin/teams/$teamId/edit': typeof AdminTeamsTeamIdEditRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/games': typeof GamesIndexRoute
   '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
+  '/admin/teams/import': typeof AdminTeamsImportRoute
   '/admin/teams/new': typeof AdminTeamsNewRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/admin/teams/$teamId/edit': typeof AdminTeamsTeamIdEditRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/games/': typeof GamesIndexRoute
   '/admin/games/new': typeof AdminGamesNewRoute
   '/admin/scorekeeper/$gameId': typeof AdminScorekeeperGameIdRoute
+  '/admin/teams/import': typeof AdminTeamsImportRoute
   '/admin/teams/new': typeof AdminTeamsNewRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/admin/teams/$teamId/edit': typeof AdminTeamsTeamIdEditRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
+    | '/admin/teams/import'
     | '/admin/teams/new'
     | '/api/autumn/$'
     | '/admin/teams/$teamId/edit'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
+    | '/admin/teams/import'
     | '/admin/teams/new'
     | '/api/autumn/$'
     | '/admin/teams/$teamId/edit'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/games/'
     | '/admin/games/new'
     | '/admin/scorekeeper/$gameId'
+    | '/admin/teams/import'
     | '/admin/teams/new'
     | '/api/autumn/$'
     | '/admin/teams/$teamId/edit'
@@ -262,6 +274,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTeamsNewRouteImport
       parentRoute: typeof AdminTeamsRoute
     }
+    '/admin/teams/import': {
+      id: '/admin/teams/import'
+      path: '/import'
+      fullPath: '/admin/teams/import'
+      preLoaderRoute: typeof AdminTeamsImportRouteImport
+      parentRoute: typeof AdminTeamsRoute
+    }
     '/admin/scorekeeper/$gameId': {
       id: '/admin/scorekeeper/$gameId'
       path: '/scorekeeper/$gameId'
@@ -299,11 +318,13 @@ const AdminGamesRouteWithChildren = AdminGamesRoute._addFileChildren(
 )
 
 interface AdminTeamsRouteChildren {
+  AdminTeamsImportRoute: typeof AdminTeamsImportRoute
   AdminTeamsNewRoute: typeof AdminTeamsNewRoute
   AdminTeamsTeamIdEditRoute: typeof AdminTeamsTeamIdEditRoute
 }
 
 const AdminTeamsRouteChildren: AdminTeamsRouteChildren = {
+  AdminTeamsImportRoute: AdminTeamsImportRoute,
   AdminTeamsNewRoute: AdminTeamsNewRoute,
   AdminTeamsTeamIdEditRoute: AdminTeamsTeamIdEditRoute,
 }

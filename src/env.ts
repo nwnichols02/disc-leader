@@ -9,6 +9,9 @@ export const env = createEnv({
 		CLERK_PUBLISHABLE_KEY: z.string().min(1).optional(),
 		CONVEX_URL: z.string().url().optional(),
 		CONVEX_DEPLOYMENT: z.string().min(1).optional(),
+		CLOUDFLARE_READ_ONLY_ACCOUNT_ID: z.string().min(1).optional(),
+		CLOUDFLARE_READ_ONLY_API_TOKEN: z.string().min(1).optional(),
+		CLOUDFLARE_STREAM_KEY: z.string().min(1).optional(),
 	},
 
 	/**
@@ -23,6 +26,8 @@ export const env = createEnv({
 		VITE_CONVEX_URL: z.string().url().optional(),
 		VITE_CONVEX_DEPLOYMENT: z.string().min(1).optional(),
 		VITE_SENTRY_DSN: z.string().url().optional(),
+		VITE_CLOUDFLARE_ACCOUNT_ID: z.string().min(1).optional(),
+		VITE_WEBSOCKET_STREAM_URL: z.string().url().optional(),
 	},
 
 	/**

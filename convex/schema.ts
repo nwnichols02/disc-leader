@@ -51,10 +51,24 @@ export default defineSchema({
     
     // Mixed Division Support
     genderRatioRequired: v.optional(v.boolean()),
+    
+    // Cloudflare Stream Integration
+    streamId: v.optional(v.string()), // Cloudflare Stream video ID
+    streamKey: v.optional(v.string()), // Live input key (admin only, encrypted)
+    streamStatus: v.optional(v.union(
+      v.literal("upcoming"),
+      v.literal("live"),
+      v.literal("completed"),
+      v.literal("failed")
+    )),
+    streamUrl: v.optional(v.string()), // HLS manifest URL
+    streamStartTime: v.optional(v.number()), // Unix timestamp
+    streamEndTime: v.optional(v.number()),
   })
     .index("status_scheduledStart", ["status", "scheduledStart"])
     .index("homeTeamId", ["homeTeamId"])
-    .index("awayTeamId", ["awayTeamId"]),
+    .index("awayTeamId", ["awayTeamId"])
+    .index("streamStatus", ["streamStatus"]),
   
   // 2. GAME STATE - Real-time game data (separate for performance)
   gameState: defineTable({

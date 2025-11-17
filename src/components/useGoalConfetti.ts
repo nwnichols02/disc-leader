@@ -1,6 +1,6 @@
 /**
  * useGoalConfetti Hook
- * 
+ *
  * Detects when a goal is scored and triggers confetti effect.
  * Works by watching for score increases in the game state.
  */
@@ -66,7 +66,12 @@ export function useGoalConfetti({
 
 		// Update ref for next comparison
 		previousScoresRef.current = current;
-	}, [gameState?.homeScore, gameState?.awayScore, homeTeamColor, awayTeamColor]);
+	}, [
+		gameState?.homeScore,
+		gameState?.awayScore,
+		homeTeamColor,
+		awayTeamColor,
+	]);
 }
 
 function triggerConfetti(team: "home" | "away", teamColor?: string) {
@@ -112,4 +117,3 @@ function triggerConfetti(team: "home" | "away", teamColor?: string) {
 		startVelocity: 45,
 	});
 }
-

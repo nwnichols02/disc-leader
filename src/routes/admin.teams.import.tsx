@@ -5,13 +5,7 @@
 
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useAction, useMutation, useQuery } from "convex/react";
-import {
-	AlertCircle,
-	CheckCircle2,
-	Download,
-	Loader2,
-	X,
-} from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, Loader2, X } from "lucide-react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 import type { ExtractedTeam } from "../../convex/firecrawl.schema";
@@ -48,7 +42,7 @@ function ImportTeamsPage() {
 	// Check for duplicates when teams are extracted
 	const duplicateCheck = useQuery(
 		api.teamImports.checkDuplicates,
-		extractedTeams.length > 0 ? { teams: extractedTeams } : "skip"
+		extractedTeams.length > 0 ? { teams: extractedTeams } : "skip",
 	);
 
 	const handleExtract = async (e: React.FormEvent) => {
@@ -70,7 +64,7 @@ function ImportTeamsPage() {
 
 			if (teams.length === 0) {
 				setError(
-					"No teams found on this website. Please check the URL or try a different page."
+					"No teams found on this website. Please check the URL or try a different page.",
 				);
 				setIsExtracting(false);
 				return;
@@ -83,7 +77,7 @@ function ImportTeamsPage() {
 			setError(
 				err instanceof Error
 					? err.message
-					: "Failed to extract teams from website"
+					: "Failed to extract teams from website",
 			);
 		} finally {
 			setIsExtracting(false);
@@ -101,7 +95,7 @@ function ImportTeamsPage() {
 
 		try {
 			const teamsToImport = Array.from(selectedTeams).map(
-				(index) => extractedTeams[index]
+				(index) => extractedTeams[index],
 			);
 
 			const results = await importTeams({
@@ -118,9 +112,7 @@ function ImportTeamsPage() {
 				}, 2000);
 			}
 		} catch (err) {
-			setError(
-				err instanceof Error ? err.message : "Failed to import teams"
-			);
+			setError(err instanceof Error ? err.message : "Failed to import teams");
 		} finally {
 			setIsImporting(false);
 		}
@@ -140,9 +132,7 @@ function ImportTeamsPage() {
 		if (selectedTeams.size === extractedTeams.length) {
 			setSelectedTeams(new Set());
 		} else {
-			setSelectedTeams(
-				new Set(extractedTeams.map((_, index) => index))
-			);
+			setSelectedTeams(new Set(extractedTeams.map((_, index) => index)));
 		}
 	};
 
@@ -443,7 +433,9 @@ function ImportTeamsPage() {
 															}
 															className="w-full h-10 rounded border border-slate-500 cursor-pointer"
 														/>
-														<p className="text-xs text-gray-500 mt-1">Primary</p>
+														<p className="text-xs text-gray-500 mt-1">
+															Primary
+														</p>
 													</div>
 													<div>
 														<input
@@ -459,14 +451,17 @@ function ImportTeamsPage() {
 															}
 															className="w-full h-10 rounded border border-slate-500 cursor-pointer"
 														/>
-														<p className="text-xs text-gray-500 mt-1">Secondary</p>
+														<p className="text-xs text-gray-500 mt-1">
+															Secondary
+														</p>
 													</div>
 												</div>
 											</div>
 
 											{duplicateInfo && (
 												<div className="text-xs text-yellow-400 bg-yellow-500/10 p-2 rounded">
-													⚠️ {duplicateInfo.reason === "name"
+													⚠️{" "}
+													{duplicateInfo.reason === "name"
 														? `Team with this name already exists`
 														: `Team with this abbreviation already exists`}
 												</div>
@@ -594,4 +589,3 @@ function ImportTeamsPage() {
 		</div>
 	);
 }
-

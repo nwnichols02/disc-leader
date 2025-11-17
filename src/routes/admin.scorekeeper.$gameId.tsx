@@ -6,11 +6,13 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { useState, useEffect } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { LiveScoreboard } from "../components/LiveScoreboard";
+import { BrowserStream } from "../components/BrowserStream";
+import { Video, VideoOff, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/scorekeeper/$gameId")({
 	component: ScorekeeperPage,
@@ -23,7 +25,7 @@ function ScorekeeperPage() {
 		team: "home" | "away";
 	} | null>(null);
 	const [showRulesEditor, setShowRulesEditor] = useState(false);
-	
+
 	// Rules editor state (for upcoming games)
 	const [stallCount, setStallCount] = useState<6 | 7 | 10>(10);
 	const [targetScore, setTargetScore] = useState(15);
@@ -76,8 +78,19 @@ function ScorekeeperPage() {
 	const recordTurnoverMutation = useMutation(api.gameMutations.recordTurnover);
 	const startGameMutation = useMutation(api.gameMutations.startGame);
 	const endGameMutation = useMutation(api.gameMutations.endGame);
-	const updateGameRulesMutation = useMutation(api.gameMutations.updateGameRules);
-	
+	const updateGameRulesMutation = useMutation(
+		api.gameMutations.updateGameRules,
+	);
+
+	// Stream management
+	const streamInfo = useQuery(api.streams.getGameStream, {
+		gameId: gameId as Id<"games">,
+	});
+	const activeStreamGameId = useQuery(api.streams.getActiveStream);
+	const updateStreamMutation = useMutation(api.streams.updateGameStream);
+	const createLiveInputAction = useAction(api.streams.createLiveInput);
+	const [isStreamLoading, setIsStreamLoading] = useState(false);
+
 	// Initialize rules editor state when game loads
 	useEffect(() => {
 		if (game && game.status === "upcoming") {
@@ -178,7 +191,7 @@ function ScorekeeperPage() {
 	// Handle save rules
 	const handleSaveRules = async () => {
 		if (!game) return;
-		
+
 		try {
 			const ruleConfig =
 				game.format === "professional"
@@ -212,13 +225,89 @@ function ScorekeeperPage() {
 				gameId: gameId as Id<"games">,
 				ruleConfig,
 			});
-			
+
 			setShowRulesEditor(false);
 			alert("Rules updated successfully!");
 		} catch (err: any) {
 			alert(`Failed to update rules: ${err.message}`);
 		}
 	};
+
+	// Handle start stream
+	const handleStartStream = async () => {
+		// Check if another game already has a live stream
+		if (activeStreamGameId && activeStreamGameId !== gameId) {
+			alert(
+				"Another game is already streaming. Only one stream can be active at a time.",
+			);
+			return;
+		}
+
+		// Check if this game already has a live stream
+		if (streamInfo?.streamStatus === "live") {
+			alert("Stream is already running for this game.");
+			return;
+		}
+
+		setIsStreamLoading(true);
+		try {
+			// If no stream key exists, create a live input first
+			if (!game.streamKey) {
+				const liveInput = await createLiveInputAction({});
+				await updateStreamMutation({
+					gameId: gameId as Id<"games">,
+					streamKey: liveInput.streamKey,
+					streamId: liveInput.uid, // Use the live input UID as streamId
+					streamStatus: "upcoming",
+					streamStartTime: Date.now(),
+				});
+			}
+
+			// Start the stream
+			await updateStreamMutation({
+				gameId: gameId as Id<"games">,
+				streamStatus: "live",
+				streamStartTime: Date.now(),
+			});
+		} catch (err: any) {
+			alert(`Failed to start stream: ${err.message}`);
+		} finally {
+			setIsStreamLoading(false);
+		}
+	};
+
+	// Handle stop stream
+	const handleStopStream = async () => {
+		// Check if stream is actually running
+		if (streamInfo?.streamStatus !== "live") {
+			alert("No active stream to stop.");
+			return;
+		}
+
+		if (!confirm("Are you sure you want to stop the stream?")) {
+			return;
+		}
+
+		setIsStreamLoading(true);
+		try {
+			await updateStreamMutation({
+				gameId: gameId as Id<"games">,
+				streamStatus: "completed",
+				streamEndTime: Date.now(),
+			});
+		} catch (err: any) {
+			alert(`Failed to stop stream: ${err.message}`);
+		} finally {
+			setIsStreamLoading(false);
+		}
+	};
+
+	// Check if stream can be started/stopped
+	const canStartStream =
+		!isStreamLoading &&
+		streamInfo?.streamStatus !== "live" &&
+		(!activeStreamGameId || activeStreamGameId === gameId);
+	const canStopStream = !isStreamLoading && streamInfo?.streamStatus === "live";
 
 	const isUpcoming = game?.status === "upcoming";
 	const isLive = game?.status === "live";
@@ -235,6 +324,41 @@ function ScorekeeperPage() {
 						</p>
 					</div>
 					<div className="flex gap-2">
+						{/* Stream Controls */}
+						{canStartStream && (
+							<button
+								onClick={handleStartStream}
+								disabled={isStreamLoading}
+								className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+							>
+								{isStreamLoading ? (
+									<Loader2 className="h-4 w-4 animate-spin" />
+								) : (
+									<Video className="h-4 w-4" />
+								)}
+								Start Stream
+							</button>
+						)}
+						{canStopStream && (
+							<button
+								onClick={handleStopStream}
+								disabled={isStreamLoading}
+								className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+							>
+								{isStreamLoading ? (
+									<Loader2 className="h-4 w-4 animate-spin" />
+								) : (
+									<VideoOff className="h-4 w-4" />
+								)}
+								Stop Stream
+							</button>
+						)}
+						{streamInfo?.streamStatus === "live" && (
+							<div className="px-3 py-2 bg-red-100 text-red-800 text-sm font-medium rounded-lg flex items-center gap-1">
+								<div className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
+								Live
+							</div>
+						)}
 						{isUpcoming && (
 							<button
 								onClick={() => setShowRulesEditor(!showRulesEditor)}
@@ -310,6 +434,31 @@ function ScorekeeperPage() {
 					gameId={gameId as Id<"games">}
 				/>
 			</div>
+
+			{/* Browser Stream - Show when stream is active or can be started */}
+			{(streamInfo?.streamStatus === "live" || canStartStream) && (
+				<div className="max-w-4xl mx-auto px-4 pb-4">
+					<BrowserStream
+						streamKey={game.streamKey || ""}
+						rtmpUrl="rtmps://live.cloudflare.com:443/live/"
+						onStreamStart={() => {
+							// Stream started from browser
+							if (streamInfo?.streamStatus !== "live") {
+								handleStartStream();
+							}
+						}}
+						onStreamStop={() => {
+							// Stream stopped from browser
+							if (streamInfo?.streamStatus === "live") {
+								handleStopStream();
+							}
+						}}
+						onError={(error) => {
+							console.error("Browser stream error:", error);
+						}}
+					/>
+				</div>
+			)}
 
 			{/* Rules Editor for Upcoming Games */}
 			{isUpcoming && showRulesEditor && (
@@ -407,9 +556,7 @@ function ScorekeeperPage() {
 									<input
 										type="number"
 										value={quarterLength}
-										onChange={(e) =>
-											setQuarterLength(Number(e.target.value))
-										}
+										onChange={(e) => setQuarterLength(Number(e.target.value))}
 										className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 										min={1}
 										max={20}
@@ -442,9 +589,7 @@ function ScorekeeperPage() {
 									<input
 										type="number"
 										value={timeoutsPerHalf}
-										onChange={(e) =>
-											setTimeoutsPerHalf(Number(e.target.value))
-										}
+										onChange={(e) => setTimeoutsPerHalf(Number(e.target.value))}
 										className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 										min={0}
 										max={10}
@@ -457,9 +602,7 @@ function ScorekeeperPage() {
 									<input
 										type="number"
 										value={timeoutDuration}
-										onChange={(e) =>
-											setTimeoutDuration(Number(e.target.value))
-										}
+										onChange={(e) => setTimeoutDuration(Number(e.target.value))}
 										className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 										min={30}
 										max={180}

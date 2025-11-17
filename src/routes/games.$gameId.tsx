@@ -14,6 +14,7 @@ import { useMemo } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { LiveScoreboard } from "../components/LiveScoreboard";
+import { StreamPlayer } from "../components/StreamPlayer";
 
 // Server-side data loader for SSR
 export const Route = createFileRoute("/games/$gameId")({
@@ -137,12 +138,24 @@ function GamePage() {
 				</div>
 			</header>
 
-			{/* Live Scoreboard */}
+			{/* Main Content */}
 			<main className="max-w-4xl mx-auto px-4 py-6">
+				{/* Stream Player - Always shown above scoreboard */}
+				<div className="mb-6">
+					<StreamPlayer
+						streamId={displayGame.streamId}
+						streamUrl={displayGame.streamUrl}
+						streamStatus={displayGame.streamStatus}
+						autoPlay={displayGame.streamStatus === "live"}
+						className="w-full"
+					/>
+				</div>
+
+				{/* Live Scoreboard */}
 				<LiveScoreboard
 					game={displayGame}
 					gameState={gameState}
-					gameId={gameId}
+					gameId={gameId as Id<"games">}
 					className="mb-6"
 				/>
 
@@ -161,60 +174,55 @@ function GamePage() {
 							[...eventsWithScores]
 								.reverse()
 								.map((event) => {
-								const teamName =
-									event.scoringTeam === "home"
-										? displayGame.homeTeam?.name || "Home Team"
-										: event.scoringTeam === "away"
-											? displayGame.awayTeam?.name || "Away Team"
-											: null;
+									const teamName =
+										event.scoringTeam === "home"
+											? displayGame.homeTeam?.name || "Home Team"
+											: event.scoringTeam === "away"
+												? displayGame.awayTeam?.name || "Away Team"
+												: null;
 
-								return (
-									<div
-										key={event._id}
-										className="px-6 py-3 hover:bg-gray-50 transition-colors"
-									>
-										<div className="flex items-start justify-between gap-4">
-											<div className="flex-1 min-w-0">
-												<div className="flex items-start gap-2">
-													{event.type === "goal" && (
-														<span className="text-lg leading-none mt-0.5">
-															🥏
-														</span>
-													)}
-													<div className="flex-1 min-w-0">
-														<p className="text-sm text-gray-900">
-															{formatEventDescription(
-																event,
-																teamName,
-															)}
-														</p>
-														<div className="flex items-center gap-2 mt-1.5">
-															<p className="text-xs text-gray-500">
-																{formatGameTime(
-																	event,
-																	displayGame.format,
-																	event.scoreAtEvent,
-																)}
-															</p>
-															<span className="text-xs text-gray-300">
-																•
+									return (
+										<div
+											key={event._id}
+											className="px-6 py-3 hover:bg-gray-50 transition-colors"
+										>
+											<div className="flex items-start justify-between gap-4">
+												<div className="flex-1 min-w-0">
+													<div className="flex items-start gap-2">
+														{event.type === "goal" && (
+															<span className="text-lg leading-none mt-0.5">
+																🥏
 															</span>
-															<p className="text-xs text-gray-500">
-																{formatTimestamp(event.timestamp)}
+														)}
+														<div className="flex-1 min-w-0">
+															<p className="text-sm text-gray-900">
+																{formatEventDescription(event, teamName)}
 															</p>
+															<div className="flex items-center gap-2 mt-1.5">
+																<p className="text-xs text-gray-500">
+																	{formatGameTime(
+																		event,
+																		displayGame.format,
+																		event.scoreAtEvent,
+																	)}
+																</p>
+																<span className="text-xs text-gray-300">•</span>
+																<p className="text-xs text-gray-500">
+																	{formatTimestamp(event.timestamp)}
+																</p>
+															</div>
 														</div>
 													</div>
 												</div>
+												{event.type === "goal" && (
+													<div className="ml-4 text-xs font-semibold text-green-600 whitespace-nowrap">
+														GOAL
+													</div>
+												)}
 											</div>
-											{event.type === "goal" && (
-												<div className="ml-4 text-xs font-semibold text-green-600 whitespace-nowrap">
-													GOAL
-												</div>
-											)}
 										</div>
-									</div>
-								);
-							})
+									);
+								})
 						) : (
 							<div className="px-6 py-8 text-center text-gray-600">
 								No events yet

@@ -23,6 +23,7 @@ import { Route as AdminTeamsImportRouteImport } from './routes/admin.teams.impor
 import { Route as AdminScorekeeperGameIdRouteImport } from './routes/admin.scorekeeper.$gameId'
 import { Route as AdminGamesNewRouteImport } from './routes/admin.games.new'
 import { Route as AdminTeamsTeamIdEditRouteImport } from './routes/admin.teams.$teamId.edit'
+import { Route as AdminGamesGameIdStreamRouteImport } from './routes/admin.games.$gameId.stream'
 
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
@@ -94,6 +95,11 @@ const AdminTeamsTeamIdEditRoute = AdminTeamsTeamIdEditRouteImport.update({
   path: '/$teamId/edit',
   getParentRoute: () => AdminTeamsRoute,
 } as any)
+const AdminGamesGameIdStreamRoute = AdminGamesGameIdStreamRouteImport.update({
+  id: '/$gameId/stream',
+  path: '/$gameId/stream',
+  getParentRoute: () => AdminGamesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/admin/teams/import': typeof AdminTeamsImportRoute
   '/admin/teams/new': typeof AdminTeamsNewRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
+  '/admin/games/$gameId/stream': typeof AdminGamesGameIdStreamRoute
   '/admin/teams/$teamId/edit': typeof AdminTeamsTeamIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/admin/teams/import': typeof AdminTeamsImportRoute
   '/admin/teams/new': typeof AdminTeamsNewRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
+  '/admin/games/$gameId/stream': typeof AdminGamesGameIdStreamRoute
   '/admin/teams/$teamId/edit': typeof AdminTeamsTeamIdEditRoute
 }
 export interface FileRoutesById {
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/admin/teams/import': typeof AdminTeamsImportRoute
   '/admin/teams/new': typeof AdminTeamsNewRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
+  '/admin/games/$gameId/stream': typeof AdminGamesGameIdStreamRoute
   '/admin/teams/$teamId/edit': typeof AdminTeamsTeamIdEditRoute
 }
 export interface FileRouteTypes {
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/admin/teams/import'
     | '/admin/teams/new'
     | '/api/autumn/$'
+    | '/admin/games/$gameId/stream'
     | '/admin/teams/$teamId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/admin/teams/import'
     | '/admin/teams/new'
     | '/api/autumn/$'
+    | '/admin/games/$gameId/stream'
     | '/admin/teams/$teamId/edit'
   id:
     | '__root__'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/admin/teams/import'
     | '/admin/teams/new'
     | '/api/autumn/$'
+    | '/admin/games/$gameId/stream'
     | '/admin/teams/$teamId/edit'
   fileRoutesById: FileRoutesById
 }
@@ -302,15 +314,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTeamsTeamIdEditRouteImport
       parentRoute: typeof AdminTeamsRoute
     }
+    '/admin/games/$gameId/stream': {
+      id: '/admin/games/$gameId/stream'
+      path: '/$gameId/stream'
+      fullPath: '/admin/games/$gameId/stream'
+      preLoaderRoute: typeof AdminGamesGameIdStreamRouteImport
+      parentRoute: typeof AdminGamesRoute
+    }
   }
 }
 
 interface AdminGamesRouteChildren {
   AdminGamesNewRoute: typeof AdminGamesNewRoute
+  AdminGamesGameIdStreamRoute: typeof AdminGamesGameIdStreamRoute
 }
 
 const AdminGamesRouteChildren: AdminGamesRouteChildren = {
   AdminGamesNewRoute: AdminGamesNewRoute,
+  AdminGamesGameIdStreamRoute: AdminGamesGameIdStreamRoute,
 }
 
 const AdminGamesRouteWithChildren = AdminGamesRoute._addFileChildren(

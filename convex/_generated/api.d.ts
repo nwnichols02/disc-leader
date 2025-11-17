@@ -12,6 +12,7 @@ import type * as firecrawl from "../firecrawl.js";
 import type * as gameMutations from "../gameMutations.js";
 import type * as games from "../games.js";
 import type * as seed from "../seed.js";
+import type * as streams from "../streams.js";
 import type * as teamImports from "../teamImports.js";
 
 import type {
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   gameMutations: typeof gameMutations;
   games: typeof games;
   seed: typeof seed;
+  streams: typeof streams;
   teamImports: typeof teamImports;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

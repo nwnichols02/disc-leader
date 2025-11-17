@@ -20,6 +20,9 @@ const config = defineConfig({
       },
     }),
   ],
+  resolve: {
+    extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
+  },
 })
 
 export default config

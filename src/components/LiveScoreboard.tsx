@@ -14,10 +14,12 @@
  * - Gender ratio display (mixed divisions)
  * - Timeout tracking
  * - Team colors
+ * - Confetti effect on goals
  */
 
 import type { FC } from "react";
 import type { Doc } from "../../convex/_generated/dataModel";
+import { useGoalConfetti } from "./useGoalConfetti";
 
 export interface LiveScoreboardProps {
 	game: Doc<"games"> & {
@@ -33,6 +35,13 @@ export const LiveScoreboard: FC<LiveScoreboardProps> = ({
 	gameState,
 	className = "",
 }) => {
+	// Trigger confetti when goals are scored
+	useGoalConfetti({
+		gameState,
+		homeTeamColor: game.homeTeam?.colors.primary,
+		awayTeamColor: game.awayTeam?.colors.primary,
+	});
+
 	if (!gameState) {
 		return (
 			<div

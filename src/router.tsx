@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/tanstackstart-react";
 import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import type { ConvexClient } from "convex/browser";
+import { env } from "@/env";
 import { getConvexClient } from "@/integrations/convex/provider";
 import * as TanstackQuery from "./integrations/tanstack-query/root-provider";
 // Import the generated route tree
@@ -33,12 +34,22 @@ export const getRouter = () => {
 		queryClient: rqContext.queryClient,
 	});
 
-	// if (!router.isServer) {
-	// 	Sentry.init({
-	// 		dsn: import.meta.env.VITE_SENTRY_DSN,
-	// 		integrations: [],
-	// 	});
-	// }
+	// Initialize Sentry for client-side error tracking
+	if (!router.isServer && env.VITE_SENTRY_DSN) {
+		Sentry.init({
+			dsn: env.VITE_SENTRY_DSN,
+			environment: import.meta.env.MODE || "development",
+			// Error collection is automatic with @sentry/tanstackstart-react
+			integrations: [Sentry.replayIntegration()],
+			// Capture Replay for 10% of all sessions,
+			// plus for 100% of sessions with an error.
+			replaysSessionSampleRate: 0.1,
+			replaysOnErrorSampleRate: 1.0,
+			// Adds request headers and IP for users, for more info visit:
+			// https://docs.sentry.io/platforms/javascript/guides/tanstackstart-react/configuration/options/#sendDefaultPii
+			sendDefaultPii: true,
+		});
+	}
 
 	return router;
 };

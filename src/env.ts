@@ -22,6 +22,7 @@ export const env = createEnv({
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1).optional(),
 		VITE_CONVEX_URL: z.string().url().optional(),
 		VITE_CONVEX_DEPLOYMENT: z.string().min(1).optional(),
+		VITE_SENTRY_DSN: z.string().url().optional(),
 	},
 
 	/**

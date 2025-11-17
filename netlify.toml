@@ -4,6 +4,7 @@
 
 [build.environment]
   NODE_VERSION = "24"
+  SECRETS_SCAN_OMIT_KEYS = "VITE_CONVEX_URL,VITE_CLERK_PUBLISHABLE_KEY"
 
 [context.deploy-preview]
   command = "bash -lc \"echo 'Building preview (skipping Convex deploy)...' && bun run build && echo '🎉 Preview build completed successfully'\""

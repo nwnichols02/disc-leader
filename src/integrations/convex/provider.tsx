@@ -2,10 +2,9 @@ import { useAuth } from "@clerk/clerk-react";
 import { ConvexQueryClient } from "@convex-dev/react-query";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { env } from "../../env";
 import { getContext } from "../tanstack-query/root-provider";
 
-const CONVEX_URL = env.VITE_CONVEX_URL;
+const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
 if (!CONVEX_URL) {
 	throw new Error("missing envar VITE_CONVEX_URL");
 }

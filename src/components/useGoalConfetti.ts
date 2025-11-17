@@ -7,16 +7,18 @@
 
 import { useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
-import type { Doc } from "../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../convex/_generated/dataModel";
 
 interface UseGoalConfettiProps {
 	gameState: Doc<"gameState"> | null | undefined;
+	gameId: Id<"games">;
 	homeTeamColor?: string;
 	awayTeamColor?: string;
 }
 
 export function useGoalConfetti({
 	gameState,
+	gameId,
 	homeTeamColor,
 	awayTeamColor,
 }: UseGoalConfettiProps) {

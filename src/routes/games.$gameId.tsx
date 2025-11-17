@@ -142,6 +142,7 @@ function GamePage() {
 				<LiveScoreboard
 					game={displayGame}
 					gameState={gameState}
+					gameId={gameId}
 					className="mb-6"
 				/>
 

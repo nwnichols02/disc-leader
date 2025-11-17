@@ -304,7 +304,11 @@ function ScorekeeperPage() {
 
 			{/* Live Scoreboard */}
 			<div className="max-w-4xl mx-auto px-4 py-4">
-				<LiveScoreboard game={game} gameState={gameState} />
+				<LiveScoreboard
+					game={game}
+					gameState={gameState}
+					gameId={gameId as Id<"games">}
+				/>
 			</div>
 
 			{/* Rules Editor for Upcoming Games */}

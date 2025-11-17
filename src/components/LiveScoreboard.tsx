@@ -18,7 +18,7 @@
  */
 
 import type { FC } from "react";
-import type { Doc } from "../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../convex/_generated/dataModel";
 import { useGoalConfetti } from "./useGoalConfetti";
 
 export interface LiveScoreboardProps {
@@ -27,6 +27,7 @@ export interface LiveScoreboardProps {
 		awayTeam?: Doc<"teams"> | null;
 	};
 	gameState: Doc<"gameState"> | null | undefined;
+	gameId: Id<"games">;
 	className?: string;
 }
 
@@ -34,10 +35,12 @@ export const LiveScoreboard: FC<LiveScoreboardProps> = ({
 	game,
 	gameState,
 	className = "",
+	gameId,
 }) => {
 	// Trigger confetti when goals are scored
 	useGoalConfetti({
 		gameState,
+		gameId: gameId as Id<"games">,
 		homeTeamColor: game.homeTeam?.colors.primary,
 		awayTeamColor: game.awayTeam?.colors.primary,
 	});

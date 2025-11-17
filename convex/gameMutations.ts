@@ -99,6 +99,7 @@ export const createGame = mutation({
 /**
  * Record a goal
  * Updates score atomically and creates immutable event record
+ * Automatically ends game if target score is reached (tournament format)
  */
 export const recordGoal = mutation({
   args: {
@@ -122,6 +123,12 @@ export const recordGoal = mutation({
     
     if (!user) {
       throw new Error("User not found")
+    }
+    
+    // Get game to check format and rules
+    const game = await ctx.db.get(args.gameId)
+    if (!game) {
+      throw new Error("Game not found")
     }
     
     // Get current game state
@@ -160,6 +167,33 @@ export const recordGoal = mutation({
       recordedBy: user._id,
     })
     
+    // Check if game should auto-end (tournament format: target score reached)
+    if (
+      game.status === "live" &&
+      game.format === "tournament" &&
+      game.ruleConfig.targetScore
+    ) {
+      // Check if the new score reaches the target
+      if (newScore >= game.ruleConfig.targetScore) {
+        // Auto-end game when target score is reached
+        await ctx.db.patch(args.gameId, {
+          status: "completed",
+          endTime: Date.now(),
+        })
+        
+        // Record game end event
+        await ctx.db.insert("events", {
+          gameId: args.gameId,
+          timestamp: Date.now(),
+          clockSeconds: gameState.clockSeconds,
+          period: gameState.period,
+          type: "gameEnd",
+          description: `Game ended: Target score of ${game.ruleConfig.targetScore} reached`,
+          recordedBy: user._id,
+        })
+      }
+    }
+    
     return { eventId, newScore }
   },
 })
@@ -167,6 +201,7 @@ export const recordGoal = mutation({
 /**
  * Update game clock
  * Controls timing for all game formats
+ * Automatically ends game when timer reaches 0 (for time-based formats)
  */
 export const updateClock = mutation({
   args: {
@@ -189,6 +224,11 @@ export const updateClock = mutation({
       throw new Error("User not found")
     }
     
+    const game = await ctx.db.get(args.gameId)
+    if (!game) {
+      throw new Error("Game not found")
+    }
+    
     const gameState = await ctx.db
       .query("gameState")
       .withIndex("gameId", (q) => q.eq("gameId", args.gameId))
@@ -204,6 +244,31 @@ export const updateClock = mutation({
       lastUpdateTime: Date.now(),
       lastUpdatedBy: user._id,
     })
+    
+    // Check if game should auto-end (timer reached 0 for time-based formats)
+    // Only auto-end if clock is running and reaches 0, and game is still live
+    if (
+      game.status === "live" &&
+      args.clockSeconds <= 0 &&
+      (game.format === "professional" || game.format === "recreational")
+    ) {
+      // Auto-end game when timer reaches 0
+      await ctx.db.patch(args.gameId, {
+        status: "completed",
+        endTime: Date.now(),
+      })
+      
+      // Record game end event
+      await ctx.db.insert("events", {
+        gameId: args.gameId,
+        timestamp: Date.now(),
+        clockSeconds: 0,
+        period: gameState.period,
+        type: "gameEnd",
+        description: "Game ended: Time expired",
+        recordedBy: user._id,
+      })
+    }
   },
 })
 
@@ -265,6 +330,122 @@ export const updateGameStatus = mutation({
         period: gameState.period,
         type: args.status === "completed" ? "gameEnd" : "periodEnd",
         description: `Game status changed to ${args.status}`,
+        recordedBy: user._id,
+      })
+    }
+  },
+})
+
+/**
+ * Start a game (convenience mutation to set status to live)
+ * Requires: User must have canManageGames permission
+ */
+export const startGame = mutation({
+  args: {
+    gameId: v.id("games"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new Error("Not authenticated")
+    }
+    
+    const user = await ctx.db
+      .query("users")
+      .withIndex("clerkId", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    
+    if (!user?.canManageGames) {
+      throw new Error("Not authorized to start games")
+    }
+    
+    const game = await ctx.db.get(args.gameId)
+    if (!game) {
+      throw new Error("Game not found")
+    }
+    
+    if (game.status !== "upcoming") {
+      throw new Error(`Cannot start game with status: ${game.status}`)
+    }
+    
+    // Update game status to live
+    await ctx.db.patch(args.gameId, {
+      status: "live",
+      actualStart: Date.now(),
+    })
+    
+    // Record event
+    const gameState = await ctx.db
+      .query("gameState")
+      .withIndex("gameId", (q) => q.eq("gameId", args.gameId))
+      .first()
+    
+    if (gameState) {
+      await ctx.db.insert("events", {
+        gameId: args.gameId,
+        timestamp: Date.now(),
+        clockSeconds: gameState.clockSeconds,
+        period: gameState.period,
+        type: "periodEnd",
+        description: "Game started",
+        recordedBy: user._id,
+      })
+    }
+  },
+})
+
+/**
+ * End a game (convenience mutation to set status to completed)
+ * Requires: User must have canManageGames permission
+ */
+export const endGame = mutation({
+  args: {
+    gameId: v.id("games"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new Error("Not authenticated")
+    }
+    
+    const user = await ctx.db
+      .query("users")
+      .withIndex("clerkId", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    
+    if (!user?.canManageGames) {
+      throw new Error("Not authorized to end games")
+    }
+    
+    const game = await ctx.db.get(args.gameId)
+    if (!game) {
+      throw new Error("Game not found")
+    }
+    
+    if (game.status !== "live") {
+      throw new Error(`Cannot end game with status: ${game.status}`)
+    }
+    
+    // Update game status to completed
+    await ctx.db.patch(args.gameId, {
+      status: "completed",
+      endTime: Date.now(),
+    })
+    
+    // Record event
+    const gameState = await ctx.db
+      .query("gameState")
+      .withIndex("gameId", (q) => q.eq("gameId", args.gameId))
+      .first()
+    
+    if (gameState) {
+      await ctx.db.insert("events", {
+        gameId: args.gameId,
+        timestamp: Date.now(),
+        clockSeconds: gameState.clockSeconds,
+        period: gameState.period,
+        type: "gameEnd",
+        description: "Game ended manually",
         recordedBy: user._id,
       })
     }
@@ -452,6 +633,79 @@ export const updateTeam = mutation({
     await ctx.db.patch(teamId, updates)
     
     return teamId
+  },
+})
+
+/**
+ * Update game rules (only allowed for upcoming games)
+ * Requires: User must have canManageGames permission
+ */
+export const updateGameRules = mutation({
+  args: {
+    gameId: v.id("games"),
+    ruleConfig: v.object({
+      stallCount: v.union(v.literal(6), v.literal(7), v.literal(10)),
+      targetScore: v.optional(v.number()),
+      quarterLength: v.optional(v.number()),
+      halfLength: v.optional(v.number()),
+      timeoutsPerHalf: v.number(),
+      timeoutDuration: v.number(),
+      capRules: v.optional(v.object({
+        softCapTime: v.number(),
+        hardCapTime: v.number(),
+      })),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new Error("Not authenticated")
+    }
+    
+    const user = await ctx.db
+      .query("users")
+      .withIndex("clerkId", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    
+    if (!user?.canManageGames) {
+      throw new Error("Not authorized to update game rules")
+    }
+    
+    const game = await ctx.db.get(args.gameId)
+    if (!game) {
+      throw new Error("Game not found")
+    }
+    
+    if (game.status !== "upcoming") {
+      throw new Error("Can only update rules for upcoming games")
+    }
+    
+    // Update game rules
+    await ctx.db.patch(args.gameId, {
+      ruleConfig: args.ruleConfig,
+    })
+    
+    // Update gameState clock if time-based format
+    const gameState = await ctx.db
+      .query("gameState")
+      .withIndex("gameId", (q) => q.eq("gameId", args.gameId))
+      .first()
+    
+    if (gameState) {
+      const newClockSeconds = args.ruleConfig.quarterLength
+        ? args.ruleConfig.quarterLength * 60
+        : args.ruleConfig.halfLength
+        ? args.ruleConfig.halfLength * 60
+        : gameState.clockSeconds
+      
+      await ctx.db.patch(gameState._id, {
+        clockSeconds: newClockSeconds,
+        homeTimeoutsRemaining: args.ruleConfig.timeoutsPerHalf,
+        awayTimeoutsRemaining: args.ruleConfig.timeoutsPerHalf,
+        lastUpdateTime: Date.now(),
+        lastUpdatedBy: user._id,
+      })
+    }
   },
 })
 

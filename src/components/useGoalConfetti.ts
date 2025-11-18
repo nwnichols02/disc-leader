@@ -26,21 +26,38 @@ export function useGoalConfetti({
 		homeScore: number;
 		awayScore: number;
 	} | null>(null);
+	const isInitializedRef = useRef(false);
+	const previousGameIdRef = useRef<Id<"games"> | null>(null);
+
+	// Reset initialization when gameId changes
+	useEffect(() => {
+		if (previousGameIdRef.current !== gameId) {
+			previousGameIdRef.current = gameId;
+			isInitializedRef.current = false;
+			previousScoresRef.current = null;
+		}
+	}, [gameId]);
 
 	useEffect(() => {
 		if (!gameState) {
-			// Initialize ref when game state first loads
-			if (previousScoresRef.current === null) {
-				previousScoresRef.current = {
-					homeScore: 0,
-					awayScore: 0,
-				};
-			}
+			// Reset initialization flag when game state is not available
+			isInitializedRef.current = false;
 			return;
 		}
 
-		// Initialize on first load
+		// Initialize on first load - don't trigger confetti on initial load
+		if (!isInitializedRef.current) {
+			previousScoresRef.current = {
+				homeScore: gameState.homeScore,
+				awayScore: gameState.awayScore,
+			};
+			isInitializedRef.current = true;
+			return;
+		}
+
+		// Only check for score changes after initialization
 		if (previousScoresRef.current === null) {
+			// This shouldn't happen, but handle it gracefully
 			previousScoresRef.current = {
 				homeScore: gameState.homeScore,
 				awayScore: gameState.awayScore,
@@ -54,12 +71,12 @@ export function useGoalConfetti({
 			awayScore: gameState.awayScore,
 		};
 
-		// Check if home team scored
+		// Check if home team scored (only trigger if score actually increased)
 		if (current.homeScore > previous.homeScore) {
 			triggerConfetti("home", homeTeamColor);
 		}
 
-		// Check if away team scored
+		// Check if away team scored (only trigger if score actually increased)
 		if (current.awayScore > previous.awayScore) {
 			triggerConfetti("away", awayTeamColor);
 		}
@@ -71,6 +88,7 @@ export function useGoalConfetti({
 		gameState?.awayScore,
 		homeTeamColor,
 		awayTeamColor,
+		gameId, // Include gameId to reset when switching games
 	]);
 }
 

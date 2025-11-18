@@ -165,7 +165,7 @@ function GamePage() {
 			{/* Main Content */}
 			<main className="max-w-4xl mx-auto px-4 py-6">
 				{/* Stream Player - Toggleable */}
-				{showVideo && (displayGame.streamId || displayGame.webRtcPlaybackUrl) && (
+				{showVideo && (
 					<div className="mb-6">
 						<StreamPlayer
 							streamId={displayGame.streamId}

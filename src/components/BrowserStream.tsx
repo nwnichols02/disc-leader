@@ -14,7 +14,7 @@
 
 import type { FC } from "react";
 import { useState, useRef, useEffect } from "react";
-import { Video, VideoOff, Mic, MicOff, Loader2, X } from "lucide-react";
+import { Video, VideoOff, Mic, MicOff, X } from "lucide-react";
 import { WHIPClient } from "@/lib/whip-client";
 
 export interface BrowserStreamProps {
@@ -503,15 +503,15 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 	};
 
 	return (
-		<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+		<div className="card bg-base-200 shadow-lg border border-base-300 p-3">
 			<div className="space-y-3">
 				{/* Header - Compact */}
 				<div className="flex items-center justify-between">
-					<h3 className="text-sm font-semibold text-gray-900">Live Stream</h3>
+					<h3 className="text-sm font-semibold text-base-content">Live Stream</h3>
 					{error && (
 						<button
 							onClick={() => setError(null)}
-							className="text-gray-400 hover:text-gray-600"
+							className="btn btn-ghost btn-xs"
 						>
 							<X className="w-3 h-3" />
 						</button>
@@ -520,8 +520,8 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 
 				{/* Error Message */}
 				{error && (
-					<div className="bg-red-50 border border-red-200 rounded-lg p-3">
-						<p className="text-sm text-red-600">{error}</p>
+					<div className="alert alert-error py-2">
+						<p className="text-xs">{error}</p>
 					</div>
 				)}
 
@@ -545,14 +545,14 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 						/>
 					)}
 					{!videoEnabled && hasAccess && (
-						<div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-							<VideoOff className="w-16 h-16 text-gray-400" />
+						<div className="absolute inset-0 flex items-center justify-center bg-base-300">
+							<VideoOff className="w-16 h-16 text-base-content/50" />
 						</div>
 					)}
 					{!hasAccess && !isRequestingAccess && (
-						<div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-							<div className="text-center text-white px-4">
-								<Video className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+						<div className="absolute inset-0 flex items-center justify-center bg-base-300">
+							<div className="text-center text-base-content px-4">
+								<Video className="w-12 h-12 mx-auto mb-2 text-base-content/50" />
 								<p className="text-xs mb-2">
 									Click "Setup Camera" to enable camera
 								</p>
@@ -560,10 +560,10 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 						</div>
 					)}
 					{isRequestingAccess && (
-						<div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-							<div className="text-center text-white">
-								<Loader2 className="w-8 h-8 mx-auto mb-2 text-gray-400 animate-spin" />
-								<p className="text-xs">Requesting camera access...</p>
+						<div className="absolute inset-0 flex items-center justify-center bg-base-300">
+							<div className="text-center text-base-content">
+								<span className="loading loading-spinner loading-md text-primary"></span>
+								<p className="text-xs mt-2">Requesting camera access...</p>
 							</div>
 						</div>
 					)}
@@ -575,11 +575,7 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 					<button
 						onClick={toggleVideo}
 						disabled={!isStreaming}
-						className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors text-xs ${
-							videoEnabled
-								? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-								: "bg-gray-100 text-gray-600 hover:bg-gray-200"
-						} disabled:opacity-50 disabled:cursor-not-allowed`}
+						className={`btn btn-xs ${videoEnabled ? "btn-primary" : "btn-ghost"}`}
 						title={videoEnabled ? "Disable video" : "Enable video"}
 					>
 						{videoEnabled ? (
@@ -593,11 +589,7 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 					<button
 						onClick={toggleAudio}
 						disabled={!isStreaming}
-						className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors text-xs ${
-							audioEnabled
-								? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-								: "bg-gray-100 text-gray-600 hover:bg-gray-200"
-						} disabled:opacity-50 disabled:cursor-not-allowed`}
+						className={`btn btn-xs ${audioEnabled ? "btn-primary" : "btn-ghost"}`}
 						title={audioEnabled ? "Disable audio" : "Enable audio"}
 					>
 						{audioEnabled ? (
@@ -613,14 +605,14 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 							<button
 								onClick={setupCamera}
 								disabled={isRequestingAccess}
-								className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+								className="btn btn-primary btn-sm"
 							>
 								{isRequestingAccess ? (
-									<Loader2 className="w-3 h-3 animate-spin" />
+									<span className="loading loading-spinner loading-xs"></span>
 								) : (
 									<Video className="w-3 h-3" />
 								)}
-								<span className="font-medium text-xs">
+								<span className="text-xs">
 									{isRequestingAccess ? "Setting up..." : "Setup Camera"}
 								</span>
 							</button>
@@ -628,7 +620,7 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 							<>
 								<button
 									onClick={revokeAccess}
-									className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+									className="btn btn-ghost btn-xs"
 									title="Revoke camera access"
 								>
 									Revoke
@@ -636,14 +628,14 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 								<button
 									onClick={startStream}
 									disabled={isLoading}
-									className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 relative"
+									className="btn btn-primary btn-sm"
 								>
 									{isLoading ? (
-										<Loader2 className="w-3 h-3 animate-spin" />
+										<span className="loading loading-spinner loading-xs"></span>
 									) : (
 										<Video className="w-3 h-3" />
 									)}
-									<span className="font-medium text-xs">
+									<span className="text-xs">
 										{isLoading ? "Starting..." : "Start Stream"}
 									</span>
 								</button>
@@ -651,10 +643,10 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 						) : (
 							<button
 								onClick={stopStream}
-								className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors flex items-center gap-1.5"
+								className="btn btn-error btn-sm"
 							>
 								<VideoOff className="w-3 h-3" />
-								<span className="font-medium text-xs">Stop</span>
+								<span className="text-xs">Stop</span>
 							</button>
 						)}
 					</div>
@@ -662,10 +654,10 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 
 				{/* Info - Compact */}
 				{isStreaming && (
-					<div className="bg-green-50 border border-green-200 rounded-lg p-2">
-						<div className="flex items-center gap-2">
-							<div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
-							<p className="text-xs text-green-800 font-medium">
+					<div className="alert alert-success py-3">
+						<div className="flex items-center gap-3">
+							<span className="w-3 h-3 bg-success-content rounded-full animate-pulse"></span>
+							<p className="text-sm font-medium">
 								Streaming to Cloudflare
 							</p>
 						</div>

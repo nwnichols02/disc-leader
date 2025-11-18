@@ -102,11 +102,11 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 	if (!streamId && !streamUrl && !webRtcPlaybackUrl) {
 		return (
 			<div
-				className={`bg-gray-100 rounded-lg flex items-center justify-center aspect-video ${className}`}
+				className={`card bg-base-200 flex items-center justify-center aspect-video ${className}`}
 			>
-				<div className="text-center text-gray-500 p-6">
+				<div className="text-center text-base-content/60 p-6">
 					<svg
-						className="w-12 h-12 mx-auto mb-2 text-gray-400"
+						className="w-12 h-12 mx-auto mb-2 text-base-content/50"
 						fill="none"
 						viewBox="0 0 24 24"
 						stroke="currentColor"
@@ -128,11 +128,11 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 	if (streamStatus === "upcoming") {
 		return (
 			<div
-				className={`bg-gray-900 rounded-lg flex items-center justify-center aspect-video ${className}`}
+				className={`card bg-base-300 flex items-center justify-center aspect-video ${className}`}
 			>
-				<div className="text-center text-white p-6">
+				<div className="text-center text-base-content p-6">
 					<svg
-						className="w-16 h-16 mx-auto mb-4 text-gray-400 animate-pulse"
+						className="w-16 h-16 mx-auto mb-4 text-primary animate-pulse"
 						fill="none"
 						viewBox="0 0 24 24"
 						stroke="currentColor"
@@ -151,7 +151,7 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 						/>
 					</svg>
 					<p className="text-lg font-medium mb-2">Stream Starting Soon</p>
-					<p className="text-sm text-gray-400">
+					<p className="text-sm text-base-content/70">
 						The live broadcast will begin shortly
 					</p>
 				</div>
@@ -163,24 +163,24 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 	if (error) {
 		return (
 			<div
-				className={`bg-red-50 rounded-lg flex items-center justify-center aspect-video border border-red-200 ${className}`}
+				className={`alert alert-error flex items-center justify-center aspect-video ${className}`}
 			>
-				<div className="text-center p-6">
-					<svg
-						className="w-12 h-12 mx-auto mb-2 text-red-400"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={2}
-							d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-						/>
-					</svg>
-					<p className="text-sm text-red-600 font-medium mb-1">Stream Error</p>
-					<p className="text-xs text-red-500">{error}</p>
+				<svg
+					className="stroke-current shrink-0 h-12 w-12"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						strokeWidth={2}
+						d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+					/>
+				</svg>
+				<div className="text-center">
+					<p className="font-bold mb-1">Stream Error</p>
+					<p className="text-xs">{error}</p>
 				</div>
 			</div>
 		);
@@ -268,11 +268,11 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 		if (streamId || streamUrl || webRtcPlaybackUrl) {
 			return (
 				<div
-					className={`bg-gray-100 rounded-lg flex items-center justify-center aspect-video ${className}`}
+					className={`card bg-base-200 flex items-center justify-center aspect-video ${className}`}
 				>
-					<div className="text-center text-gray-500 p-6">
+					<div className="text-center text-base-content/60 p-6">
 						<svg
-							className="w-12 h-12 mx-auto mb-2 text-gray-400"
+							className="w-12 h-12 mx-auto mb-2 text-base-content/50"
 							fill="none"
 							viewBox="0 0 24 24"
 							stroke="currentColor"
@@ -285,7 +285,7 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 							/>
 						</svg>
 						<p className="text-sm">Stream configuration incomplete</p>
-						<p className="text-xs text-gray-400 mt-1">
+						<p className="text-xs text-base-content/50 mt-1">
 							{!accountId &&
 								!webRtcPlaybackUrl &&
 								!streamUrl &&

@@ -10,7 +10,9 @@ import {
 	Outlet,
 	useMatches,
 } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "convex/_generated/dataModel";
 
@@ -32,9 +34,36 @@ function AdminTeamsPage() {
 	const isOnChildRoute =
 		matches.length > 0 && matches[matches.length - 1].id !== "/admin/teams";
 
+	const [deletingTeamId, setDeletingTeamId] = useState<string | null>(null);
+	const [deleteConfirmTeamId, setDeleteConfirmTeamId] = useState<string | null>(null);
+
 	// Fetch all teams
 	const teams = useQuery(api.games.listTeams, {}) ?? [];
+	const deleteTeam = useMutation(api.gameMutations.deleteTeam);
 	const isPending = teams === undefined;
+
+	const handleDeleteClick = (teamId: string) => {
+		setDeleteConfirmTeamId(teamId);
+	};
+
+	const handleDeleteConfirm = async (teamId: string) => {
+		setDeletingTeamId(teamId);
+		setDeleteConfirmTeamId(null);
+		try {
+			await deleteTeam({ teamId: teamId as Id<"teams"> });
+			// The query will automatically refetch after the mutation
+		} catch (error) {
+			console.error("Failed to delete team:", error);
+			const errorMessage = error instanceof Error ? error.message : "Failed to delete team. Please try again.";
+			alert(errorMessage);
+		} finally {
+			setDeletingTeamId(null);
+		}
+	};
+
+	const handleDeleteCancel = () => {
+		setDeleteConfirmTeamId(null);
+	};
 
 	// If on a child route (like /new or /edit), only render the Outlet
 	if (isOnChildRoute) {
@@ -128,6 +157,41 @@ function AdminTeamsPage() {
 									>
 										Edit
 									</Link>
+									{deleteConfirmTeamId === team._id ? (
+										<div className="flex flex-col gap-2 w-full mt-2">
+											<button
+												onClick={() => handleDeleteConfirm(team._id)}
+												disabled={deletingTeamId === team._id}
+												className="btn btn-error btn-sm w-full"
+											>
+												{deletingTeamId === team._id ? (
+													<span className="loading loading-spinner loading-xs"></span>
+												) : (
+													"Confirm Delete"
+												)}
+											</button>
+											<button
+												onClick={handleDeleteCancel}
+												disabled={deletingTeamId === team._id}
+												className="btn btn-ghost btn-sm w-full"
+											>
+												Cancel
+											</button>
+										</div>
+									) : (
+										<button
+											onClick={() => handleDeleteClick(team._id)}
+											disabled={deletingTeamId === team._id}
+											className="btn btn-error btn-sm"
+											title="Delete team"
+										>
+											{deletingTeamId === team._id ? (
+												<span className="loading loading-spinner loading-xs"></span>
+											) : (
+												<Trash2 className="h-4 w-4" />
+											)}
+										</button>
+									)}
 								</div>
 							</div>
 						</div>

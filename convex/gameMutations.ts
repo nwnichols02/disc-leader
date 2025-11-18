@@ -637,6 +637,70 @@ export const updateTeam = mutation({
 })
 
 /**
+ * Delete a team and all related data
+ * Requires: User must have canManageTeams permission
+ * Checks: Team must not be used in any games
+ * Deletes: team and all players associated with the team
+ */
+export const deleteTeam = mutation({
+  args: {
+    teamId: v.id("teams"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new Error("Not authenticated")
+    }
+    
+    const user = await ctx.db
+      .query("users")
+      .withIndex("clerkId", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    
+    if (!user?.canManageTeams) {
+      throw new Error("Not authorized to delete teams")
+    }
+    
+    const team = await ctx.db.get(args.teamId)
+    if (!team) {
+      throw new Error("Team not found")
+    }
+    
+    // Check if team is used in any games (as home or away team)
+    const [homeGames, awayGames] = await Promise.all([
+      ctx.db
+        .query("games")
+        .withIndex("homeTeamId", (q) => q.eq("homeTeamId", args.teamId))
+        .first(),
+      ctx.db
+        .query("games")
+        .withIndex("awayTeamId", (q) => q.eq("awayTeamId", args.teamId))
+        .first(),
+    ])
+    
+    if (homeGames || awayGames) {
+      throw new Error("Cannot delete team: Team is used in one or more games. Delete or update those games first.")
+    }
+    
+    // Get all players for this team
+    const players = await ctx.db
+      .query("players")
+      .withIndex("teamId", (q) => q.eq("teamId", args.teamId))
+      .collect()
+    
+    // Delete all players associated with the team
+    await Promise.all(
+      players.map((player) => ctx.db.delete(player._id))
+    )
+    
+    // Finally, delete the team itself
+    await ctx.db.delete(args.teamId)
+    
+    return { success: true, deletedPlayers: players.length }
+  },
+})
+
+/**
  * Update game rules (only allowed for upcoming games)
  * Requires: User must have canManageGames permission
  */

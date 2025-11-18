@@ -358,10 +358,11 @@ function ScorekeeperPage() {
 					<div className="flex gap-2">
 						{/* Stream Status Indicator - Only show when actually streaming */}
 						{streamInfo?.streamStatus === "live" && isActuallyStreaming && (
-							<div className="badge badge-error gap-2">
-								<span className="w-2 h-2 bg-error rounded-full animate-pulse"></span>
+							<div className="btn btn-error btn-sm px-4 py-2 bg-error text-error-content rounded-md flex items-center gap-2 font-medium">
+								<span className="w-3 h-3 bg-error-content rounded-full animate-pulse"></span>
 								Live Streaming
 							</div>
+							
 						)}
 						{isUpcoming && (
 							<button

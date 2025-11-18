@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import type { ConvexClient } from "convex/browser";
+import { env } from "@/env";
 import Header from "../components/Header";
 import { UserSync } from "../components/UserSync";
 import { AutumnProvider } from "../integrations/autumn/provider";
@@ -31,13 +32,18 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "TanStack Start Starter",
+				title: env.VITE_APP_TITLE || "Disc Leader",
 			},
 		],
 		links: [
 			{
 				rel: "stylesheet",
 				href: appCss,
+			},
+			{
+				rel: "icon",
+				type: "image/svg+xml",
+				href: "/favicon.svg",
 			},
 		],
 	}),
@@ -46,6 +52,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+	const isDevelopment = import.meta.env.DEV;
+
 	return (
 		<html lang="en">
 			<head>
@@ -58,18 +66,21 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 							<UserSync />
 							<Header />
 							{children}
-							<TanStackDevtools
-								config={{
-									position: "bottom-right",
-								}}
-								plugins={[
-									{
-										name: "Tanstack Router",
-										render: <TanStackRouterDevtoolsPanel />,
-									},
-									TanStackQueryDevtools,
-								]}
-							/>
+							{/* Only show devtools in development */}
+							{isDevelopment && (
+								<TanStackDevtools
+									config={{
+										position: "bottom-right",
+									}}
+									plugins={[
+										{
+											name: "Tanstack Router",
+											render: <TanStackRouterDevtoolsPanel />,
+										},
+										TanStackQueryDevtools,
+									]}
+								/>
+							)}
 						</AutumnProvider>
 					</ConvexProvider>
 				</ClerkProvider>

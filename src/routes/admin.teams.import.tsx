@@ -5,7 +5,7 @@
 
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { AlertCircle, CheckCircle2, Download, Loader2, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, X } from "lucide-react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 import type { ExtractedTeam } from "../../convex/firecrawl.schema";
@@ -149,6 +149,14 @@ function ImportTeamsPage() {
 	const getDuplicateInfo = (index: number) => {
 		return duplicateCheck?.duplicates.find((d: any) => d.index === index);
 	};
+
+	const selectedDuplicateCount =
+		duplicateCheck && duplicateCheck.duplicates.length > 0
+			? duplicateCheck.duplicates.filter((d: any) => selectedTeams.has(d.index))
+					.length
+			: 0;
+
+	const hasBlockingDuplicates = !skipDuplicates && selectedDuplicateCount > 0;
 
 	return (
 		<div className="max-w-6xl mx-auto px-4 py-8">
@@ -480,14 +488,14 @@ function ImportTeamsPage() {
 					</div>
 
 					{/* Action Buttons */}
-					<div className="card-actions pt-6 border-t border-base-300">
+					<div className="card-actions flex-col md:flex-row pt-6 border-t border-base-300 gap-3">
 						<button
 							onClick={() => {
 								setExtractedTeams([]);
 								setSelectedTeams(new Set());
 								setUrl("");
 							}}
-							className="btn btn-ghost flex-1"
+							className="btn btn-ghost w-full md:flex-1"
 							disabled={isImporting}
 						>
 							Start Over
@@ -495,13 +503,9 @@ function ImportTeamsPage() {
 						<button
 							onClick={handleImport}
 							disabled={
-								isImporting ||
-								selectedTeams.size === 0 ||
-								(!skipDuplicates &&
-									duplicateCheck &&
-									duplicateCheck.duplicates.length > 0)
+								isImporting || selectedTeams.size === 0 || hasBlockingDuplicates
 							}
-							className="btn btn-primary flex-1"
+							className="btn btn-primary w-full md:flex-1"
 						>
 							{isImporting ? (
 								<>
@@ -515,6 +519,16 @@ function ImportTeamsPage() {
 								</>
 							)}
 						</button>
+						{hasBlockingDuplicates && (
+							<div className="w-full text-sm text-warning flex items-center gap-2">
+								<AlertCircle size={16} />
+								<span>
+									Remove {selectedDuplicateCount} duplicate
+									{selectedDuplicateCount === 1 ? "" : "s"} from your selection or
+									enable "Skip duplicate teams" to continue.
+								</span>
+							</div>
+						)}
 					</div>
 				</div>
 			)}

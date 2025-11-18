@@ -6,7 +6,6 @@
 
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import { UpgradeButton } from "@/components/autumn/UpgradeButton";
 import { useFeatureAccess } from "@/utils/feature-gates";
 import { api } from "../../convex/_generated/api";
 
@@ -124,7 +123,12 @@ function AdminDashboard() {
 								</ul>
 							</div>
 							<div className="flex-shrink-0">
-								<UpgradeButton productId="pro" variant="secondary" size="lg" />
+								<Link
+									to="/pricing"
+									className="btn btn-secondary btn-lg"
+								>
+									View Pricing
+								</Link>
 							</div>
 						</div>
 					</div>

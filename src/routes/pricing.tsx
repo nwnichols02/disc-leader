@@ -29,11 +29,12 @@ function PricingPage() {
 			features: [
 				{ text: "Up to 5 games", included: true },
 				{ text: "Up to 2 teams", included: true },
-				{ text: "Basic scorekeeping", included: true },
+				{ text: "Real-time scorekeeping", included: true },
 				{ text: "Game history", included: true },
 				{ text: "Live scoreboard", included: false },
+				{ text: "Live streaming", included: false },
+				{ text: "Team import from websites", included: false },
 				{ text: "Advanced analytics", included: false },
-				{ text: "Tournament management", included: false },
 			],
 			cta: "Current Plan",
 			highlighted: false,
@@ -43,15 +44,17 @@ function PricingPage() {
 			name: "Pro",
 			price: "$10",
 			period: "per month",
-			description: "For serious disc golf enthusiasts",
+			description: "For serious Ultimate Frisbee teams and leagues",
 			features: [
 				{ text: "Unlimited games", included: true },
 				{ text: "Unlimited teams", included: true },
-				{ text: "Basic scorekeeping", included: true },
+				{ text: "Real-time scorekeeping", included: true },
 				{ text: "Game history", included: true },
 				{ text: "Live scoreboard", included: true },
+				{ text: "Live streaming", included: true },
+				{ text: "Team import from websites", included: true },
 				{ text: "Advanced analytics", included: true },
-				{ text: "Tournament management", included: false },
+				{ text: "Multiple game formats", included: true },
 			],
 			cta: "Upgrade to Pro",
 			highlighted: true,
@@ -61,7 +64,7 @@ function PricingPage() {
 			name: "Premium",
 			price: "$25",
 			period: "per month",
-			description: "For tournament organizers",
+			description: "For tournament organizers and leagues",
 			features: [
 				{ text: "Everything in Pro", included: true },
 				{ text: "Tournament management", included: true },
@@ -176,8 +179,8 @@ function PricingPage() {
 						Choose Your Plan
 					</h1>
 					<p className="text-xl text-base-content/70">
-						Upgrade to unlock more features and take your disc golf game to the
-						next level
+						Upgrade to unlock more features and take your Ultimate Frisbee
+						management to the next level
 					</p>
 				</div>
 

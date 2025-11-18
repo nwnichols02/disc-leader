@@ -10,9 +10,10 @@ import {
 	Outlet,
 	useMatches,
 } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
+import { Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/games")({
 	component: AdminGamesPage,
@@ -46,6 +47,8 @@ function AdminGamesPage() {
 	const [statusFilter, setStatusFilter] = useState<
 		"all" | "live" | "upcoming" | "completed"
 	>("all");
+	const [deletingGameId, setDeletingGameId] = useState<string | null>(null);
+	const [deleteConfirmGameId, setDeleteConfirmGameId] = useState<string | null>(null);
 
 	// Fetch games based on filter
 	const games =
@@ -56,7 +59,31 @@ function AdminGamesPage() {
 				: { status: statusFilter, limit: 50 },
 		) ?? [];
 
+	const deleteGame = useMutation(api.gameMutations.deleteGame);
+
 	const isPending = games === undefined;
+
+	const handleDeleteClick = (gameId: string) => {
+		setDeleteConfirmGameId(gameId);
+	};
+
+	const handleDeleteConfirm = async (gameId: string) => {
+		setDeletingGameId(gameId);
+		setDeleteConfirmGameId(null);
+		try {
+			await deleteGame({ gameId });
+			// The query will automatically refetch after the mutation
+		} catch (error) {
+			console.error("Failed to delete game:", error);
+			alert("Failed to delete game. Please try again.");
+		} finally {
+			setDeletingGameId(null);
+		}
+	};
+
+	const handleDeleteCancel = () => {
+		setDeleteConfirmGameId(null);
+	};
 
 	// If on a child route (like /new), only render the Outlet
 	if (isOnChildRoute) {
@@ -246,6 +273,41 @@ function AdminGamesPage() {
 														</svg>
 														Score
 													</Link>
+												)}
+												{deleteConfirmGameId === game._id ? (
+													<div className="flex items-center gap-2">
+														<button
+															onClick={() => handleDeleteConfirm(game._id)}
+															disabled={deletingGameId === game._id}
+															className="btn btn-error btn-sm"
+														>
+															{deletingGameId === game._id ? (
+																<span className="loading loading-spinner loading-xs"></span>
+															) : (
+																"Confirm"
+															)}
+														</button>
+														<button
+															onClick={handleDeleteCancel}
+															disabled={deletingGameId === game._id}
+															className="btn btn-ghost btn-sm"
+														>
+															Cancel
+														</button>
+													</div>
+												) : (
+													<button
+														onClick={() => handleDeleteClick(game._id)}
+														disabled={deletingGameId === game._id}
+														className="btn btn-error btn-sm"
+														title="Delete game"
+													>
+														{deletingGameId === game._id ? (
+															<span className="loading loading-spinner loading-xs"></span>
+														) : (
+															<Trash2 className="h-4 w-4" />
+														)}
+													</button>
 												)}
 											</div>
 										</td>

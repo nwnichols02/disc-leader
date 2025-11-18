@@ -710,6 +710,65 @@ export const updateGameRules = mutation({
 })
 
 /**
+ * Delete a game and all related data
+ * Requires: User must have canManageGames permission
+ * Deletes: game, gameState, events, and subscriptions related to the game
+ */
+export const deleteGame = mutation({
+  args: {
+    gameId: v.id("games"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new Error("Not authenticated")
+    }
+    
+    const user = await ctx.db
+      .query("users")
+      .withIndex("clerkId", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    
+    if (!user?.canManageGames) {
+      throw new Error("Not authorized to delete games")
+    }
+    
+    const game = await ctx.db.get(args.gameId)
+    if (!game) {
+      throw new Error("Game not found")
+    }
+    
+    // Delete all related data in parallel
+    const [gameStates, events, subscriptions] = await Promise.all([
+      ctx.db
+        .query("gameState")
+        .withIndex("gameId", (q) => q.eq("gameId", args.gameId))
+        .collect(),
+      ctx.db
+        .query("events")
+        .withIndex("gameId", (q) => q.eq("gameId", args.gameId))
+        .collect(),
+      ctx.db
+        .query("subscriptions")
+        .withIndex("gameId", (q) => q.eq("gameId", args.gameId))
+        .collect(),
+    ])
+    
+    // Delete all related records
+    await Promise.all([
+      ...gameStates.map((state) => ctx.db.delete(state._id)),
+      ...events.map((event) => ctx.db.delete(event._id)),
+      ...subscriptions.map((sub) => ctx.db.delete(sub._id)),
+    ])
+    
+    // Finally, delete the game itself
+    await ctx.db.delete(args.gameId)
+    
+    return { success: true }
+  },
+})
+
+/**
  * Create a new user (typically called during first sign-in)
  */
 export const createUser = mutation({

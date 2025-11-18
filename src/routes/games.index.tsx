@@ -192,7 +192,7 @@ function GameCard({ game, isLive, isCompleted }: GameCardProps) {
 								<div
 									className="w-3 h-3 rounded-full"
 									style={{
-										backgroundColor: game.homeTeam?.primaryColor || "#3b82f6",
+										backgroundColor: game.homeTeam?.colors?.primary || "#3b82f6",
 									}}
 								/>
 								<span className="text-lg font-semibold text-base-content truncate">
@@ -211,11 +211,11 @@ function GameCard({ game, isLive, isCompleted }: GameCardProps) {
 								<div
 									className="w-3 h-3 rounded-full"
 									style={{
-										backgroundColor: game.awayTeamId?.primaryColor || "#ef4444",
+										backgroundColor: game.awayTeam?.colors?.primary || "#ef4444",
 									}}
 								/>
 								<span className="text-lg font-semibold text-base-content truncate">
-									{game.awayTeamId?.name || "Away Team"}
+									{game.awayTeam?.name || "Away Team"}
 								</span>
 							</div>
 							{isLive || isCompleted ? (

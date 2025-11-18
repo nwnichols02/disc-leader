@@ -11,7 +11,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react"; // Changed to Convex's useQuery
 import { useMemo, useState } from "react";
-import { Video, VideoOff } from "lucide-react";
+import { Share2, Video, VideoOff, Check } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { LiveScoreboard } from "../components/LiveScoreboard";
@@ -71,6 +71,7 @@ function GamePage() {
 	const { gameId } = Route.useParams();
 	const { game: initialGame } = Route.useLoaderData();
 	const [showVideo, setShowVideo] = useState(true);
+	const [copied, setCopied] = useState(false);
 
 	// Real-time subscription to game data
 	// Convex handles SSR hydration automatically
@@ -92,6 +93,33 @@ function GamePage() {
 
 	// Use SSR data as fallback while real-time subscription loads
 	const displayGame = game ?? initialGame;
+
+	// Copy URL to clipboard
+	const handleShare = async () => {
+		try {
+			const url = window.location.href;
+			await navigator.clipboard.writeText(url);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+		} catch (err) {
+			console.error("Failed to copy URL:", err);
+			// Fallback for older browsers
+			const textArea = document.createElement("textarea");
+			textArea.value = window.location.href;
+			textArea.style.position = "fixed";
+			textArea.style.opacity = "0";
+			document.body.appendChild(textArea);
+			textArea.select();
+			try {
+				document.execCommand("copy");
+				setCopied(true);
+				setTimeout(() => setCopied(false), 2000);
+			} catch (fallbackErr) {
+				console.error("Fallback copy failed:", fallbackErr);
+			}
+			document.body.removeChild(textArea);
+		}
+	};
 
 	// Calculate score at the time of each event
 	// Start with current gameState and work backwards through events
@@ -152,26 +180,46 @@ function GamePage() {
 							{displayGame.venue || "Venue TBA"}
 						</p>
 					</div>
-					{/* Video Toggle Button */}
-					{(displayGame.streamId || displayGame.webRtcPlaybackUrl) && (
+					<div className="flex items-center gap-2">
+						{/* Share Button */}
 						<button
-							onClick={() => setShowVideo(!showVideo)}
+							onClick={handleShare}
 							className="btn btn-ghost btn-sm"
-							title={showVideo ? "Hide video" : "Show video"}
+							title={copied ? "URL copied!" : "Copy link to share"}
 						>
-							{showVideo ? (
+							{copied ? (
 								<>
-									<VideoOff className="w-4 h-4" />
-									<span className="hidden sm:inline">Hide Video</span>
+									<Check className="w-4 h-4 text-success" />
+									<span className="hidden sm:inline">Copied!</span>
 								</>
 							) : (
 								<>
-									<Video className="w-4 h-4" />
-									<span className="hidden sm:inline">Show Video</span>
+									<Share2 className="w-4 h-4" />
+									<span className="hidden sm:inline">Share</span>
 								</>
 							)}
 						</button>
-					)}
+						{/* Video Toggle Button */}
+						{(displayGame.streamId || displayGame.webRtcPlaybackUrl) && (
+							<button
+								onClick={() => setShowVideo(!showVideo)}
+								className="btn btn-ghost btn-sm"
+								title={showVideo ? "Hide video" : "Show video"}
+							>
+								{showVideo ? (
+									<>
+										<VideoOff className="w-4 h-4" />
+										<span className="hidden sm:inline">Hide Video</span>
+									</>
+								) : (
+									<>
+										<Video className="w-4 h-4" />
+										<span className="hidden sm:inline">Show Video</span>
+									</>
+								)}
+							</button>
+						)}
+					</div>
 				</div>
 			</header>
 

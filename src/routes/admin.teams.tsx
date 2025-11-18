@@ -46,20 +46,14 @@ function AdminTeamsPage() {
 			{/* Page Header */}
 			<div className="flex justify-between items-center">
 				<div>
-					<h2 className="text-2xl font-bold text-gray-900">Teams</h2>
-					<p className="text-gray-600 mt-1">Manage teams and rosters</p>
+					<h2 className="text-2xl font-bold text-base-content">Teams</h2>
+					<p className="text-base-content/70 mt-1">Manage teams and rosters</p>
 				</div>
 				<div className="flex gap-3">
-					<Link
-						to="/admin/teams/import"
-						className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-					>
+					<Link to="/admin/teams/import" className="btn btn-success">
 						Import Teams
 					</Link>
-					<Link
-						to="/admin/teams/new"
-						className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-					>
+					<Link to="/admin/teams/new" className="btn btn-primary">
 						+ Create Team
 					</Link>
 				</div>
@@ -67,13 +61,15 @@ function AdminTeamsPage() {
 
 			{/* Teams Grid */}
 			{isPending ? (
-				<div className="text-center py-12 text-gray-600">Loading teams...</div>
+				<div className="text-center py-12 text-base-content/60">
+					<span className="loading loading-spinner loading-lg text-primary"></span>
+				</div>
 			) : teams.length > 0 ? (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{teams.map((team) => (
 						<div
 							key={team._id}
-							className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+							className="card bg-base-200 shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
 						>
 							{/* Team Header with Colors */}
 							<div
@@ -86,12 +82,12 @@ function AdminTeamsPage() {
 							</div>
 
 							{/* Team Info */}
-							<div className="p-6">
-								<h3 className="text-lg font-semibold text-gray-900 mb-2">
+							<div className="card-body p-6">
+								<h3 className="card-title text-base-content mb-2">
 									{team.name}
 								</h3>
 
-								<div className="space-y-2 text-sm text-gray-600">
+								<div className="space-y-2 text-sm text-base-content/70">
 									<div className="flex items-center space-x-2">
 										<span className="font-medium">Division:</span>
 										<span className="capitalize">
@@ -103,12 +99,12 @@ function AdminTeamsPage() {
 										<span className="font-medium">Colors:</span>
 										<div className="flex items-center space-x-1">
 											<div
-												className="w-4 h-4 rounded-full border border-gray-300"
+												className="w-4 h-4 rounded-full border border-base-300"
 												style={{ backgroundColor: team.colors.primary }}
 												title={team.colors.primary}
 											/>
 											<div
-												className="w-4 h-4 rounded-full border border-gray-300"
+												className="w-4 h-4 rounded-full border border-base-300"
 												style={{ backgroundColor: team.colors.secondary }}
 												title={team.colors.secondary}
 											/>
@@ -117,9 +113,9 @@ function AdminTeamsPage() {
 								</div>
 
 								{/* Actions */}
-								<div className="mt-4 pt-4 border-t border-gray-200 flex space-x-2">
+								<div className="card-actions mt-4 pt-4 border-t border-base-300">
 									<button
-										className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+										className="btn btn-ghost btn-sm flex-1"
 										onClick={() =>
 											alert("View roster functionality coming soon!")
 										}
@@ -128,7 +124,7 @@ function AdminTeamsPage() {
 									</button>
 									<Link
 										to={`/admin/teams/${team._id as Id<"teams">}/edit` as any}
-										className="flex-1 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-colors text-center"
+										className="btn btn-primary btn-sm flex-1"
 									>
 										Edit
 									</Link>
@@ -138,16 +134,15 @@ function AdminTeamsPage() {
 					))}
 				</div>
 			) : (
-				<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-					<div className="text-gray-600 mb-4">
-						No teams found. Create your first team to get started!
+				<div className="card bg-base-200 shadow-lg">
+					<div className="card-body text-center p-12">
+						<div className="text-base-content/70 mb-4">
+							No teams found. Create your first team to get started!
+						</div>
+						<Link to="/admin/teams/new" className="btn btn-primary">
+							+ Create Team
+						</Link>
 					</div>
-					<Link
-						to="/admin/teams/new"
-						className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-					>
-						+ Create Team
-					</Link>
 				</div>
 			)}
 		</div>

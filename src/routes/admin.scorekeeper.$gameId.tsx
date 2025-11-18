@@ -169,7 +169,7 @@ function ScorekeeperPage() {
 	if (isGamePending || !game) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
-				<div className="text-lg text-gray-600">Loading game...</div>
+				<span className="loading loading-spinner loading-lg text-primary"></span>
 			</div>
 		);
 	}
@@ -243,7 +243,7 @@ function ScorekeeperPage() {
 	// Handle start stream - called when BrowserStream starts streaming
 	const handleStartStream = async () => {
 		setIsStreamLoading(true);
-		
+
 		try {
 			// Validate states first (these are synchronous checks)
 			if (activeStreamGameId && activeStreamGameId !== gameId) {
@@ -269,7 +269,7 @@ function ScorekeeperPage() {
 			if (!game.streamKey || !streamInfo?.webRtcPublishUrl) {
 				// Create live input and update stream in sequence (update depends on live input)
 				const liveInput = await createLiveInputAction({});
-				
+
 				// Update stream with all data at once
 				operations.push(
 					updateStreamMutation({
@@ -281,7 +281,7 @@ function ScorekeeperPage() {
 						webRtcPlaybackUrl: liveInput.webRtcPlaybackUrl,
 						streamStatus: "upcoming",
 						streamStartTime: Date.now(),
-					})
+					}),
 				);
 			}
 
@@ -291,7 +291,7 @@ function ScorekeeperPage() {
 					gameId: gameId as Id<"games">,
 					streamStatus: "live",
 					streamStartTime: Date.now(),
-				})
+				}),
 			);
 
 			// Execute all operations in parallel
@@ -335,37 +335,38 @@ function ScorekeeperPage() {
 		!isStreamLoading &&
 		streamInfo?.streamStatus !== "live" &&
 		(!activeStreamGameId || activeStreamGameId === gameId);
-	
+
 	// Check if we should show the BrowserStream component
-	const shouldShowBrowserStream = !!streamInfo?.webRtcPublishUrl && 
+	const shouldShowBrowserStream =
+		!!streamInfo?.webRtcPublishUrl &&
 		(streamInfo?.streamStatus === "live" || canStartStream);
 
 	const isUpcoming = game?.status === "upcoming";
 	const isLive = game?.status === "live";
 
 	return (
-		<div className="min-h-screen bg-gray-50 pb-20">
+		<div className="min-h-screen bg-base-100 pb-20">
 			{/* Header */}
-			<header className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10">
-				<div className="max-w-4xl mx-auto flex justify-between items-center">
+			<header className="navbar bg-base-200 border-b border-base-300 px-4 py-3 sticky top-0 z-10">
+				<div className="max-w-4xl mx-auto flex justify-between items-center w-full">
 					<div>
-						<h1 className="text-lg font-bold text-gray-900">Scorekeeper</h1>
-						<p className="text-sm text-gray-600">
+						<h1 className="text-lg font-bold text-base-content">Scorekeeper</h1>
+						<p className="text-sm text-base-content/70">
 							{game.homeTeam?.name} vs {game.awayTeam?.name}
 						</p>
 					</div>
 					<div className="flex gap-2">
 						{/* Stream Status Indicator - Only show when actually streaming */}
 						{streamInfo?.streamStatus === "live" && isActuallyStreaming && (
-							<div className="px-3 py-2 bg-red-100 text-red-800 text-sm font-medium rounded-lg flex items-center gap-1">
-								<div className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
+							<div className="badge badge-error gap-2">
+								<span className="w-2 h-2 bg-error rounded-full animate-pulse"></span>
 								Live Streaming
 							</div>
 						)}
 						{isUpcoming && (
 							<button
 								onClick={() => setShowRulesEditor(!showRulesEditor)}
-								className="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
+								className="btn btn-ghost btn-sm"
 							>
 								{showRulesEditor ? "Hide" : "Edit"} Rules
 							</button>
@@ -373,11 +374,11 @@ function ScorekeeperPage() {
 						{isUpcoming ? (
 							<button
 								onClick={handleStartGame}
-								className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+								className="btn btn-success btn-sm"
 							>
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
-									className="h-4 w-4 inline mr-1"
+									className="h-4 w-4"
 									fill="none"
 									viewBox="0 0 24 24"
 									stroke="currentColor"
@@ -400,11 +401,11 @@ function ScorekeeperPage() {
 						) : isLive ? (
 							<button
 								onClick={handleEndGame}
-								className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+								className="btn btn-error btn-sm"
 							>
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
-									className="h-4 w-4 inline mr-1"
+									className="h-4 w-4"
 									fill="none"
 									viewBox="0 0 24 24"
 									stroke="currentColor"
@@ -472,22 +473,22 @@ function ScorekeeperPage() {
 			{/* Rules Editor for Upcoming Games */}
 			{isUpcoming && showRulesEditor && (
 				<div className="max-w-4xl mx-auto px-4 mb-4">
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-						<h3 className="text-lg font-semibold text-gray-900 mb-4">
+					<div className="card bg-base-200 shadow-lg p-4">
+						<h3 className="card-title text-base-content mb-4">
 							Game Rules
 						</h3>
 						<div className="space-y-4">
 							{/* Stall Count */}
 							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-1">
-									Stall Count
+								<label className="label">
+									<span className="label-text">Stall Count</span>
 								</label>
 								<select
 									value={stallCount}
 									onChange={(e) =>
 										setStallCount(Number(e.target.value) as 6 | 7 | 10)
 									}
-									className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+									className="select select-bordered w-full"
 								>
 									<option value={6}>6</option>
 									<option value={7}>7</option>
@@ -499,35 +500,33 @@ function ScorekeeperPage() {
 							{game.format === "tournament" && (
 								<>
 									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Target Score
+										<label className="label">
+											<span className="label-text">Target Score</span>
 										</label>
 										<input
 											type="number"
 											value={targetScore}
 											onChange={(e) => setTargetScore(Number(e.target.value))}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+											className="input input-bordered w-full"
 											min={1}
 											max={25}
 										/>
 									</div>
 									<div>
-										<label className="flex items-center">
+										<label className="label cursor-pointer">
+											<span className="label-text">Use Soft Cap</span>
 											<input
 												type="checkbox"
 												checked={useSoftCap}
 												onChange={(e) => setUseSoftCap(e.target.checked)}
-												className="mr-2"
+												className="checkbox checkbox-primary"
 											/>
-											<span className="text-sm font-medium text-gray-700">
-												Use Soft Cap
-											</span>
 										</label>
 										{useSoftCap && (
 											<div className="mt-2 grid grid-cols-2 gap-2">
 												<div>
-													<label className="block text-xs text-gray-600 mb-1">
-														Soft Cap (min)
+													<label className="label">
+														<span className="label-text-alt">Soft Cap (min)</span>
 													</label>
 													<input
 														type="number"
@@ -535,12 +534,12 @@ function ScorekeeperPage() {
 														onChange={(e) =>
 															setSoftCapTime(Number(e.target.value))
 														}
-														className="w-full px-2 py-1 border border-gray-300 rounded"
+														className="input input-bordered input-sm w-full"
 													/>
 												</div>
 												<div>
-													<label className="block text-xs text-gray-600 mb-1">
-														Hard Cap (min)
+													<label className="label">
+														<span className="label-text-alt">Hard Cap (min)</span>
 													</label>
 													<input
 														type="number"
@@ -548,7 +547,7 @@ function ScorekeeperPage() {
 														onChange={(e) =>
 															setHardCapTime(Number(e.target.value))
 														}
-														className="w-full px-2 py-1 border border-gray-300 rounded"
+														className="input input-bordered input-sm w-full"
 													/>
 												</div>
 											</div>
@@ -559,14 +558,14 @@ function ScorekeeperPage() {
 
 							{game.format === "professional" && (
 								<div>
-									<label className="block text-sm font-medium text-gray-700 mb-1">
-										Quarter Length (minutes)
+									<label className="label">
+										<span className="label-text">Quarter Length (minutes)</span>
 									</label>
 									<input
 										type="number"
 										value={quarterLength}
 										onChange={(e) => setQuarterLength(Number(e.target.value))}
-										className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+										className="input input-bordered w-full"
 										min={1}
 										max={20}
 									/>
@@ -575,14 +574,14 @@ function ScorekeeperPage() {
 
 							{game.format === "recreational" && (
 								<div>
-									<label className="block text-sm font-medium text-gray-700 mb-1">
-										Half Length (minutes)
+									<label className="label">
+										<span className="label-text">Half Length (minutes)</span>
 									</label>
 									<input
 										type="number"
 										value={halfLength}
 										onChange={(e) => setHalfLength(Number(e.target.value))}
-										className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+										className="input input-bordered w-full"
 										min={10}
 										max={60}
 									/>
@@ -592,27 +591,27 @@ function ScorekeeperPage() {
 							{/* Common rules */}
 							<div className="grid grid-cols-2 gap-4">
 								<div>
-									<label className="block text-sm font-medium text-gray-700 mb-1">
-										Timeouts Per Half
+									<label className="label">
+										<span className="label-text">Timeouts Per Half</span>
 									</label>
 									<input
 										type="number"
 										value={timeoutsPerHalf}
 										onChange={(e) => setTimeoutsPerHalf(Number(e.target.value))}
-										className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+										className="input input-bordered w-full"
 										min={0}
 										max={10}
 									/>
 								</div>
 								<div>
-									<label className="block text-sm font-medium text-gray-700 mb-1">
-										Timeout Duration (seconds)
+									<label className="label">
+										<span className="label-text">Timeout Duration (seconds)</span>
 									</label>
 									<input
 										type="number"
 										value={timeoutDuration}
 										onChange={(e) => setTimeoutDuration(Number(e.target.value))}
-										className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+										className="input input-bordered w-full"
 										min={30}
 										max={180}
 									/>
@@ -622,7 +621,7 @@ function ScorekeeperPage() {
 							{/* Save button */}
 							<button
 								onClick={handleSaveRules}
-								className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+								className="btn btn-primary w-full"
 							>
 								Save Rules
 							</button>
@@ -635,8 +634,8 @@ function ScorekeeperPage() {
 			{isLive && (
 				<div className="max-w-4xl mx-auto px-4 space-y-4">
 					{/* Goal Buttons */}
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-						<h3 className="text-sm font-semibold text-gray-700 mb-3">
+					<div className="card bg-base-200 shadow-lg p-4">
+						<h3 className="card-title text-base-content mb-3 text-sm">
 							Record Goal
 						</h3>
 						<div className="grid grid-cols-2 gap-3">
@@ -645,7 +644,7 @@ function ScorekeeperPage() {
 									setPendingGoal({ team: "home" });
 									setShowPlayerSelect(true);
 								}}
-								className="py-6 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl rounded-lg transition-colors active:scale-95"
+								className="btn btn-primary btn-lg py-6 text-xl font-bold active:scale-95"
 							>
 								{game.homeTeam?.abbreviation || "HOME"} Goal
 							</button>
@@ -654,7 +653,7 @@ function ScorekeeperPage() {
 									setPendingGoal({ team: "away" });
 									setShowPlayerSelect(true);
 								}}
-								className="py-6 bg-red-600 hover:bg-red-700 text-white font-bold text-xl rounded-lg transition-colors active:scale-95"
+								className="btn btn-error btn-lg py-6 text-xl font-bold active:scale-95"
 							>
 								{game.awayTeam?.abbreviation || "AWAY"} Goal
 							</button>
@@ -662,27 +661,27 @@ function ScorekeeperPage() {
 					</div>
 
 					{/* Possession Control */}
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-						<h3 className="text-sm font-semibold text-gray-700 mb-3">
+					<div className="card bg-base-200 shadow-lg p-4">
+						<h3 className="card-title text-base-content mb-3 text-sm">
 							Possession
 						</h3>
 						<div className="grid grid-cols-2 gap-3">
 							<button
 								onClick={() => handlePossession("home")}
-								className={`py-4 font-semibold rounded-lg transition-colors ${
+								className={`btn py-4 font-semibold ${
 									gameState?.possession === "home"
-										? "bg-blue-600 text-white"
-										: "bg-gray-100 text-gray-700 hover:bg-gray-200"
+										? "btn-primary"
+										: "btn-ghost"
 								}`}
 							>
 								{game.homeTeam?.abbreviation || "HOME"}
 							</button>
 							<button
 								onClick={() => handlePossession("away")}
-								className={`py-4 font-semibold rounded-lg transition-colors ${
+								className={`btn py-4 font-semibold ${
 									gameState?.possession === "away"
-										? "bg-red-600 text-white"
-										: "bg-gray-100 text-gray-700 hover:bg-gray-200"
+										? "btn-error"
+										: "btn-ghost"
 								}`}
 							>
 								{game.awayTeam?.abbreviation || "AWAY"}
@@ -691,44 +690,44 @@ function ScorekeeperPage() {
 					</div>
 
 					{/* Turnover Buttons */}
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-						<h3 className="text-sm font-semibold text-gray-700 mb-3">
+					<div className="card bg-base-200 shadow-lg p-4">
+						<h3 className="card-title text-base-content mb-3 text-sm">
 							Turnovers
 						</h3>
 						<div className="grid grid-cols-3 gap-2">
 							<button
 								onClick={() => handleTurnover("drop")}
-								className="py-3 bg-orange-100 hover:bg-orange-200 text-orange-800 font-medium rounded-lg transition-colors text-sm"
+								className="btn btn-warning btn-sm"
 							>
 								Drop
 							</button>
 							<button
 								onClick={() => handleTurnover("throwaway")}
-								className="py-3 bg-orange-100 hover:bg-orange-200 text-orange-800 font-medium rounded-lg transition-colors text-sm"
+								className="btn btn-warning btn-sm"
 							>
 								Throwaway
 							</button>
 							<button
 								onClick={() => handleTurnover("block")}
-								className="py-3 bg-green-100 hover:bg-green-200 text-green-800 font-medium rounded-lg transition-colors text-sm"
+								className="btn btn-success btn-sm"
 							>
 								Block
 							</button>
 							<button
 								onClick={() => handleTurnover("stall")}
-								className="py-3 bg-orange-100 hover:bg-orange-200 text-orange-800 font-medium rounded-lg transition-colors text-sm"
+								className="btn btn-warning btn-sm"
 							>
 								Stall
 							</button>
 							<button
 								onClick={() => handleTurnover("out-of-bounds")}
-								className="py-3 bg-orange-100 hover:bg-orange-200 text-orange-800 font-medium rounded-lg transition-colors text-sm"
+								className="btn btn-warning btn-sm"
 							>
 								Out
 							</button>
 							<button
 								onClick={() => handleTurnover("other")}
-								className="py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors text-sm"
+								className="btn btn-ghost btn-sm"
 							>
 								Other
 							</button>
@@ -739,29 +738,29 @@ function ScorekeeperPage() {
 
 			{/* Player Selection Modal */}
 			{showPlayerSelect && pendingGoal && (
-				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-4">
-					<div className="bg-white rounded-t-xl sm:rounded-xl w-full max-w-md max-h-[80vh] overflow-auto">
-						<div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
-							<h3 className="text-lg font-semibold text-gray-900">
+				<div className="modal modal-open">
+					<div className="modal-box max-w-md max-h-[80vh] overflow-auto">
+						<div className="sticky top-0 bg-base-100 border-b border-base-300 px-6 py-4 -mx-6 -mt-6 mb-4">
+							<h3 className="text-lg font-semibold text-base-content">
 								Who scored?
 							</h3>
-							<p className="text-sm text-gray-600 mt-1">
+							<p className="text-sm text-base-content/70 mt-1">
 								{pendingGoal.team === "home"
 									? game.homeTeam?.name
 									: game.awayTeam?.name}
 							</p>
 						</div>
 
-						<div className="p-4 space-y-2">
+						<div className="space-y-2">
 							{/* Quick record without player */}
 							<button
 								onClick={() => handleGoal(pendingGoal.team)}
-								className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
+								className="btn btn-ghost w-full"
 							>
 								Record Goal (No Player)
 							</button>
 
-							<div className="border-t border-gray-200 my-4"></div>
+							<div className="divider"></div>
 
 							{/* Player list */}
 							{(pendingGoal.team === "home" ? homePlayers : awayPlayers).map(
@@ -769,41 +768,54 @@ function ScorekeeperPage() {
 									<button
 										key={player._id}
 										onClick={() => handleGoal(pendingGoal.team!, player._id)}
-										className="w-full py-3 px-4 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg transition-colors text-left"
+										className="btn btn-outline w-full justify-start text-left h-auto py-3 px-4"
 									>
-										<div className="font-medium text-gray-900">
-											#{player.jerseyNumber} {player.firstName}{" "}
-											{player.lastName}
-										</div>
-										{player.position && (
-											<div className="text-sm text-gray-600 capitalize">
-												{player.position}
+										<div>
+											<div className="font-medium text-base-content">
+												#{player.jerseyNumber} {player.firstName}{" "}
+												{player.lastName}
 											</div>
-										)}
+											{player.position && (
+												<div className="text-sm text-base-content/60 capitalize">
+													{player.position}
+												</div>
+											)}
+										</div>
 									</button>
 								),
 							)}
 
 							{(pendingGoal.team === "home" ? homePlayers : awayPlayers)
 								.length === 0 && (
-								<div className="text-center py-4 text-gray-600">
+								<div className="text-center py-4 text-base-content/60">
 									No players available
 								</div>
 							)}
 						</div>
 
-						<div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
+						<div className="modal-action sticky bottom-0 bg-base-100 border-t border-base-300 -mx-6 -mb-6 px-6 py-4">
 							<button
 								onClick={() => {
 									setShowPlayerSelect(false);
 									setPendingGoal(null);
 								}}
-								className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
+								className="btn btn-ghost w-full"
 							>
 								Cancel
 							</button>
 						</div>
 					</div>
+					<form method="dialog" className="modal-backdrop">
+						<button
+							onClick={() => {
+								setShowPlayerSelect(false);
+								setPendingGoal(null);
+							}}
+							className="hidden"
+						>
+							close
+						</button>
+					</form>
 				</div>
 			)}
 		</div>

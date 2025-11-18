@@ -110,7 +110,7 @@ function EditTeamPage() {
 		return (
 			<div className="max-w-4xl mx-auto px-4 py-8">
 				<div className="flex items-center justify-center py-12">
-					<Loader2 className="animate-spin text-cyan-400" size={48} />
+					<span className="loading loading-spinner loading-lg text-primary"></span>
 				</div>
 			</div>
 		);
@@ -123,23 +123,25 @@ function EditTeamPage() {
 				<div className="mb-8">
 					<Link
 						to="/admin/teams"
-						className="text-cyan-400 hover:text-cyan-300 font-medium inline-flex items-center gap-2"
+						className="link link-primary font-medium inline-flex items-center gap-2"
 					>
 						← Back to Teams
 					</Link>
 				</div>
-				<div className="bg-red-500/10 border border-red-500/50 rounded-lg p-8 text-center">
-					<AlertCircle className="mx-auto mb-4 text-red-400" size={48} />
-					<h2 className="text-2xl font-bold text-white mb-2">Team Not Found</h2>
-					<p className="text-gray-300 mb-4">
-						The team you're trying to edit doesn't exist.
-					</p>
-					<Link
-						to="/admin/teams"
-						className="inline-flex items-center px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-lg transition-colors"
-					>
-						Back to Teams
-					</Link>
+				<div className="alert alert-error">
+					<AlertCircle
+						className="stroke-current shrink-0 h-12 w-12"
+						size={48}
+					/>
+					<div>
+						<h2 className="text-2xl font-bold mb-2">Team Not Found</h2>
+						<p className="mb-4">
+							The team you're trying to edit doesn't exist.
+						</p>
+						<Link to="/admin/teams" className="btn btn-primary">
+							Back to Teams
+						</Link>
+					</div>
 				</div>
 			</div>
 		);
@@ -151,7 +153,7 @@ function EditTeamPage() {
 			<div className="mb-8">
 				<Link
 					to="/admin/teams"
-					className="text-cyan-400 hover:text-cyan-300 font-medium inline-flex items-center gap-2"
+					className="link link-primary font-medium inline-flex items-center gap-2"
 				>
 					← Back to Teams
 				</Link>
@@ -159,14 +161,16 @@ function EditTeamPage() {
 
 			{/* Form */}
 			<form onSubmit={handleSubmit}>
-				<div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700 p-8 space-y-8">
+				<div className="card bg-base-200 shadow-xl p-8 space-y-8">
 					<div className="flex items-center gap-3">
-						<div className="p-3 bg-cyan-500/10 rounded-lg">
-							<Users className="text-cyan-400" size={28} />
+						<div className="p-3 bg-primary/10 rounded-lg">
+							<Users className="text-primary" size={28} />
 						</div>
 						<div>
-							<h1 className="text-3xl font-bold text-white mb-2">Edit Team</h1>
-							<p className="text-gray-400">
+							<h1 className="text-3xl font-bold text-base-content mb-2">
+								Edit Team
+							</h1>
+							<p className="text-base-content/70">
 								Update team branding and division info
 							</p>
 						</div>
@@ -174,14 +178,14 @@ function EditTeamPage() {
 
 					{/* Error Message */}
 					{error && (
-						<div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-start gap-3">
+						<div className="alert alert-error">
 							<AlertCircle
-								className="text-red-500 flex-shrink-0 mt-0.5"
+								className="stroke-current shrink-0 h-6 w-6"
 								size={20}
 							/>
 							<div>
-								<h3 className="font-semibold text-red-400 mb-1">Error</h3>
-								<p className="text-red-300 text-sm">{error}</p>
+								<h3 className="font-bold">Error</h3>
+								<div className="text-xs">{error}</div>
 							</div>
 						</div>
 					)}
@@ -189,30 +193,34 @@ function EditTeamPage() {
 					{/* Team Information Section */}
 					<div className="space-y-4">
 						<div className="flex items-center gap-2">
-							<Users className="text-cyan-400" size={20} />
-							<h2 className="text-xl font-bold text-white">Team Information</h2>
+							<Users className="text-primary" size={20} />
+							<h2 className="text-xl font-bold text-base-content">
+								Team Information
+							</h2>
 						</div>
 
-						<div className="bg-slate-700/50 rounded-lg p-6 space-y-4">
+						<div className="card bg-base-300 p-6 space-y-4">
 							{/* Team Name */}
 							<div>
-								<label className="block text-sm font-medium text-gray-300 mb-2">
-									Team Name *
+								<label className="label">
+									<span className="label-text">Team Name *</span>
 								</label>
 								<input
 									type="text"
 									value={name}
 									onChange={(e) => setName(e.target.value)}
 									placeholder="e.g. San Francisco Revolver"
-									className="w-full px-4 py-3 bg-slate-600 border border-slate-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+									className="input input-bordered w-full"
 									required
 								/>
 							</div>
 
 							{/* Abbreviation */}
 							<div>
-								<label className="block text-sm font-medium text-gray-300 mb-2">
-									Abbreviation * (Max 5 characters)
+								<label className="label">
+									<span className="label-text">
+										Abbreviation * (Max 5 characters)
+									</span>
 								</label>
 								<input
 									type="text"
@@ -222,23 +230,25 @@ function EditTeamPage() {
 									}
 									placeholder="e.g. SFR"
 									maxLength={5}
-									className="w-full px-4 py-3 bg-slate-600 border border-slate-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 uppercase"
+									className="input input-bordered w-full uppercase"
 									required
 								/>
-								<p className="mt-1 text-xs text-gray-400">
-									{abbreviation.length}/5 characters - Used on scoreboards
-								</p>
+								<label className="label">
+									<span className="label-text-alt">
+										{abbreviation.length}/5 characters - Used on scoreboards
+									</span>
+								</label>
 							</div>
 
 							{/* Division */}
 							<div>
-								<label className="block text-sm font-medium text-gray-300 mb-2">
-									Division (Optional)
+								<label className="label">
+									<span className="label-text">Division (Optional)</span>
 								</label>
 								<select
 									value={division}
 									onChange={(e) => setDivision(e.target.value as Division | "")}
-									className="w-full px-4 py-3 bg-slate-600 border border-slate-500 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+									className="select select-bordered w-full"
 								>
 									<option value="">Select division...</option>
 									<option value="open">Open</option>
@@ -252,29 +262,31 @@ function EditTeamPage() {
 					{/* Team Branding Section */}
 					<div className="space-y-4">
 						<div className="flex items-center gap-2">
-							<Palette className="text-cyan-400" size={20} />
-							<h2 className="text-xl font-bold text-white">Team Branding</h2>
+							<Palette className="text-primary" size={20} />
+							<h2 className="text-xl font-bold text-base-content">
+								Team Branding
+							</h2>
 						</div>
 
-						<div className="bg-slate-700/50 rounded-lg p-6 space-y-6">
+						<div className="card bg-base-300 p-6 space-y-6">
 							{/* Colors */}
 							<div>
-								<label className="block text-sm font-medium text-gray-300 mb-3">
-									Team Colors *
+								<label className="label">
+									<span className="label-text">Team Colors *</span>
 								</label>
 
 								<div className="grid md:grid-cols-2 gap-6">
 									{/* Primary Color */}
 									<div>
-										<label className="block text-xs font-medium text-gray-400 mb-2">
-											Primary Color
+										<label className="label">
+											<span className="label-text-alt">Primary Color</span>
 										</label>
 										<div className="flex items-center gap-3">
 											<input
 												type="color"
 												value={primaryColor}
 												onChange={(e) => setPrimaryColor(e.target.value)}
-												className="w-20 h-20 rounded-lg border-2 border-slate-500 cursor-pointer bg-slate-600"
+												className="w-20 h-20 rounded-lg border-2 border-base-300 cursor-pointer"
 											/>
 											<div className="flex-1">
 												<input
@@ -282,26 +294,26 @@ function EditTeamPage() {
 													value={primaryColor}
 													onChange={(e) => setPrimaryColor(e.target.value)}
 													placeholder="#3b82f6"
-													className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded-lg text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cyan-500"
+													className="input input-bordered w-full text-sm font-mono"
 												/>
-												<p className="mt-1 text-xs text-gray-400">
-													Hex color code
-												</p>
+												<label className="label">
+													<span className="label-text-alt">Hex color code</span>
+												</label>
 											</div>
 										</div>
 									</div>
 
 									{/* Secondary Color */}
 									<div>
-										<label className="block text-xs font-medium text-gray-400 mb-2">
-											Secondary Color
+										<label className="label">
+											<span className="label-text-alt">Secondary Color</span>
 										</label>
 										<div className="flex items-center gap-3">
 											<input
 												type="color"
 												value={secondaryColor}
 												onChange={(e) => setSecondaryColor(e.target.value)}
-												className="w-20 h-20 rounded-lg border-2 border-slate-500 cursor-pointer bg-slate-600"
+												className="w-20 h-20 rounded-lg border-2 border-base-300 cursor-pointer"
 											/>
 											<div className="flex-1">
 												<input
@@ -309,11 +321,11 @@ function EditTeamPage() {
 													value={secondaryColor}
 													onChange={(e) => setSecondaryColor(e.target.value)}
 													placeholder="#1e40af"
-													className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded-lg text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cyan-500"
+													className="input input-bordered w-full text-sm font-mono"
 												/>
-												<p className="mt-1 text-xs text-gray-400">
-													Hex color code
-												</p>
+												<label className="label">
+													<span className="label-text-alt">Hex color code</span>
+												</label>
 											</div>
 										</div>
 									</div>
@@ -321,56 +333,64 @@ function EditTeamPage() {
 
 								{/* Color Preview */}
 								<div className="mt-6">
-									<p className="text-sm font-medium text-gray-300 mb-3">
-										Preview
-									</p>
+									<label className="label">
+										<span className="label-text">Preview</span>
+									</label>
 									<div
-										className="h-32 rounded-lg flex items-center justify-center text-white text-4xl font-bold shadow-lg border border-slate-600"
+										className="h-32 rounded-lg flex items-center justify-center text-white text-4xl font-bold shadow-lg border border-base-300"
 										style={{
 											background: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`,
 										}}
 									>
 										{abbreviation || "ABC"}
 									</div>
-									<p className="mt-2 text-xs text-gray-400 text-center">
-										This is how your team will appear in games and scoreboards
-									</p>
+									<label className="label">
+										<span className="label-text-alt text-center w-full">
+											This is how your team will appear in games and scoreboards
+										</span>
+									</label>
 								</div>
 							</div>
 
 							{/* Logo URL */}
 							<div>
-								<label className="block text-sm font-medium text-gray-300 mb-2">
-									Logo URL (Optional)
+								<label className="label">
+									<span className="label-text">Logo URL (Optional)</span>
 								</label>
 								<input
 									type="url"
 									value={logo}
 									onChange={(e) => setLogo(e.target.value)}
 									placeholder="https://example.com/logo.png"
-									className="w-full px-4 py-3 bg-slate-600 border border-slate-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+									className="input input-bordered w-full"
 								/>
-								<p className="mt-1 text-xs text-gray-400">
-									URL to the team's logo image (for future use)
-								</p>
+								<label className="label">
+									<span className="label-text-alt">
+										URL to the team's logo image (for future use)
+									</span>
+								</label>
 							</div>
 						</div>
 					</div>
 
 					{/* Submit Buttons */}
-					<div className="flex gap-4 pt-6 border-t border-slate-700">
-						<Link
-							to="/admin/teams"
-							className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors text-center"
-						>
+					<div className="card-actions pt-6 border-t border-base-300">
+						<Link to="/admin/teams" className="btn btn-ghost flex-1">
 							Cancel
 						</Link>
 						<button
 							type="submit"
 							disabled={isSubmitting || !name.trim() || !abbreviation.trim()}
-							className="flex-1 px-6 py-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+							className="btn btn-primary flex-1"
 						>
-							{isSubmitting ? "Saving Changes..." : "Save Changes"}
+							{isSubmitting ? (
+								<>
+									<span className="loading loading-spinner loading-sm"></span>
+									Saving Changes...
+								</>
+							) : (
+								"Save Changes"
+							)}
 						</button>
 					</div>
 				</div>

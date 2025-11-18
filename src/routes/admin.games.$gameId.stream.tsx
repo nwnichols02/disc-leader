@@ -40,7 +40,9 @@ function StreamManagementPage() {
 	// Mutations and Actions
 	const updateStream = useMutation(api.streams.updateGameStream);
 	const createLiveInputAction = useAction(api.streams.createLiveInput);
-	const fetchAndUpdateLiveInputAction = useAction(api.streams.fetchAndUpdateLiveInput);
+	const fetchAndUpdateLiveInputAction = useAction(
+		api.streams.fetchAndUpdateLiveInput,
+	);
 	const [isFetching, setIsFetching] = useState(false);
 
 	// Copy to clipboard
@@ -195,7 +197,8 @@ function StreamManagementPage() {
 							{streamInfo?.streamId && !streamInfo?.webRtcPublishUrl && (
 								<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
 									<p className="text-sm text-yellow-800 mb-3">
-										Stream ID exists but WebRTC URLs are missing. Fetch details from Cloudflare to update.
+										Stream ID exists but WebRTC URLs are missing. Fetch details
+										from Cloudflare to update.
 									</p>
 									<button
 										onClick={handleFetchLiveInput}

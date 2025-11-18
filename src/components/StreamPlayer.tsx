@@ -51,7 +51,7 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 	const getAccountId = (): string | null => {
 		const envAccountId = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
 		if (envAccountId) return envAccountId;
-		
+
 		// Try to extract from webRtcPlaybackUrl or streamUrl
 		return extractAccountId(webRtcPlaybackUrl) || extractAccountId(streamUrl);
 	};
@@ -224,14 +224,14 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 				params.set("autoplay", "true");
 			}
 			params.set("preload", "true");
-			
+
 			// Get poster/thumbnail URL if we have streamId
 			if (streamId || extractedStreamId) {
 				const posterStreamId = streamId || extractedStreamId;
 				const posterUrl = `https://customer-${extractedAccountId}.cloudflarestream.com/${posterStreamId}/thumbnails/thumbnail.jpg?time=&height=600`;
 				params.set("poster", posterUrl);
 			}
-			
+
 			iframeSrc = `https://customer-${extractedAccountId}.cloudflarestream.com/${extractedStreamId}/iframe?${params.toString()}`;
 		}
 	} else if (streamUrl) {
@@ -286,8 +286,12 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 						</svg>
 						<p className="text-sm">Stream configuration incomplete</p>
 						<p className="text-xs text-gray-400 mt-1">
-							{!accountId && !webRtcPlaybackUrl && !streamUrl && "Cloudflare account not configured"}
-							{(accountId || webRtcPlaybackUrl || streamUrl) && "Unable to build stream URL"}
+							{!accountId &&
+								!webRtcPlaybackUrl &&
+								!streamUrl &&
+								"Cloudflare account not configured"}
+							{(accountId || webRtcPlaybackUrl || streamUrl) &&
+								"Unable to build stream URL"}
 						</p>
 					</div>
 				</div>

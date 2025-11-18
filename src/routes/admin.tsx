@@ -5,8 +5,9 @@
  * Provides layout for all admin pages with navigation.
  */
 
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { SignInButton, useAuth, useUser } from "@clerk/clerk-react";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { LogIn } from "lucide-react";
 
 // Check authentication before rendering admin routes
 export const Route = createFileRoute("/admin")({
@@ -29,7 +30,7 @@ function AdminLayout() {
 	if (!isLoaded) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
-				<div className="text-lg text-gray-600">Loading...</div>
+				<span className="loading loading-spinner loading-lg text-primary"></span>
 			</div>
 		);
 	}
@@ -37,34 +38,28 @@ function AdminLayout() {
 	// Redirect to sign in if not authenticated
 	if (!isSignedIn) {
 		return (
-			<div className="flex items-center justify-center min-h-screen">
-				<div className="max-w-md text-center">
-					<h1 className="text-2xl font-bold text-gray-900 mb-4">
-						Authentication Required
-					</h1>
-					<p className="text-gray-600 mb-6">
-						You must be signed in to access the admin dashboard.
-					</p>
-					<a
-						href="/demo/clerk"
-						className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-					>
-						Sign In with Clerk
-					</a>
+			<div className="flex items-center justify-center min-h-screen bg-base-100">
+				<div className="max-w-md text-center card bg-base-200 shadow-xl">
+					<SignInButton mode="modal">
+						<button className="btn btn-primary w-full">
+							<LogIn size={20} />
+							<span className="font-medium">Sign In to Manage</span>
+						</button>
+					</SignInButton>
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-base-100">
 			{/* Admin Header */}
-			<header className="bg-white border-b border-gray-200">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex justify-between items-center h-16">
+			<header className="navbar bg-base-200 border-b border-base-300">
+				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+					<div className="flex justify-between items-center">
 						{/* Logo/Title */}
 						<div className="flex items-center space-x-8">
-							<h1 className="text-xl font-bold text-gray-900">
+							<h1 className="text-xl font-bold text-base-content">
 								DiscLeader Admin
 							</h1>
 
@@ -72,27 +67,27 @@ function AdminLayout() {
 							<nav className="hidden md:flex space-x-4">
 								<Link
 									to="/admin"
-									className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+									className="btn btn-ghost btn-sm"
 									activeProps={{
-										className: "bg-gray-100 text-gray-900",
+										className: "btn-active",
 									}}
 								>
 									Dashboard
 								</Link>
 								<Link
 									to="/admin/games"
-									className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+									className="btn btn-ghost btn-sm"
 									activeProps={{
-										className: "bg-gray-100 text-gray-900",
+										className: "btn-active",
 									}}
 								>
 									Games
 								</Link>
 								<Link
 									to="/admin/teams"
-									className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+									className="btn btn-ghost btn-sm"
 									activeProps={{
-										className: "bg-gray-100 text-gray-900",
+										className: "btn-active",
 									}}
 								>
 									Teams
@@ -102,13 +97,17 @@ function AdminLayout() {
 
 						{/* User Info */}
 						<div className="flex items-center space-x-4">
-							<div className="text-sm text-gray-700">
+							<div className="text-sm text-base-content/70">
 								{user?.emailAddresses?.[0]?.emailAddress || "Admin User"}
 							</div>
-							<div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
-								{user?.firstName?.[0] ||
-									user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() ||
-									"A"}
+							<div className="avatar placeholder">
+								<div className="bg-primary text-primary-content rounded-full w-8 flex justify-center items-center">
+									<span className="text-sm font-bold">
+										{user?.firstName?.[0] ||
+											user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() ||
+											"A"}
+									</span>
+								</div>
 							</div>
 						</div>
 					</div>

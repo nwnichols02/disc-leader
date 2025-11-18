@@ -20,6 +20,33 @@ export const getRouter = () => {
 			convexClient: convexClient as unknown as ConvexClient, // Add Convex client to context for SSR
 		},
 		defaultPreload: "intent",
+		defaultViewTransition: {
+			types: (locationChangeInfo) => {
+				// Skip transitions for hash changes only
+				if (locationChangeInfo.hashChanged && !locationChangeInfo.pathChanged) {
+					return false;
+				}
+				// Use different transition types based on route depth
+				const toDepth = locationChangeInfo.toLocation.pathname
+					.split("/")
+					.filter(Boolean).length;
+				const fromDepth =
+					locationChangeInfo.fromLocation?.pathname.split("/").filter(Boolean)
+						.length || 0;
+
+				// Determine transition direction based on depth change
+				if (toDepth > fromDepth) {
+					// Going deeper - slide in from right
+					return ["slide-right"];
+				} else if (toDepth < fromDepth) {
+					// Going back - slide in from left
+					return ["slide-left"];
+				} else {
+					// Same depth - fade
+					return ["fade"];
+				}
+			},
+		},
 		Wrap: (props: { children: React.ReactNode }) => {
 			return (
 				<TanstackQuery.Provider {...rqContext}>

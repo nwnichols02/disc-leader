@@ -47,10 +47,8 @@ export const LiveScoreboard: FC<LiveScoreboardProps> = ({
 
 	if (!gameState) {
 		return (
-			<div
-				className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}
-			>
-				<div className="text-center py-8 text-gray-600">
+			<div className={`card bg-base-200 shadow-lg p-6 ${className}`}>
+				<div className="text-center py-8 text-base-content/60">
 					Game not started yet
 				</div>
 			</div>
@@ -58,9 +56,7 @@ export const LiveScoreboard: FC<LiveScoreboardProps> = ({
 	}
 
 	return (
-		<div
-			className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}
-		>
+		<div className={`card bg-base-200 shadow-lg p-6 ${className}`}>
 			<div className="space-y-6">
 				{/* Score Display */}
 				<div className="grid grid-cols-3 gap-4 text-center">
@@ -72,39 +68,35 @@ export const LiveScoreboard: FC<LiveScoreboardProps> = ({
 						>
 							{game.homeTeam?.abbreviation || "HOME"}
 						</div>
-						<div className="text-5xl font-bold tabular-nums">
+						<div className="text-5xl font-bold tabular-nums text-base-content">
 							{gameState.homeScore}
 						</div>
 						{gameState.possession === "home" && (
-							<div className="text-xs text-gray-600">● Possession</div>
+							<div className="text-xs text-base-content/60">● Possession</div>
 						)}
 					</div>
 
 					{/* Clock & Period */}
 					<div className="flex flex-col items-center justify-center space-y-2">
-						<div className="text-sm font-medium text-gray-600">
+						<div className="text-sm font-medium text-base-content/70">
 							{formatPeriod(game.format, gameState.period, gameState)}
 						</div>
 						{game.format === "professional" && (
-							<div className="text-2xl font-mono tabular-nums">
+							<div className="text-2xl font-mono tabular-nums text-base-content">
 								{formatTime(gameState.clockSeconds)}
 							</div>
 						)}
 						{game.status === "live" && (
-							<div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-								<span className="animate-pulse mr-1">●</span>
+							<div className="badge badge-error gap-2">
+								<span className="animate-pulse">●</span>
 								LIVE
 							</div>
 						)}
 						{game.status === "upcoming" && (
-							<div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-								UPCOMING
-							</div>
+							<div className="badge badge-info">UPCOMING</div>
 						)}
 						{game.status === "completed" && (
-							<div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-								FINAL
-							</div>
+							<div className="badge badge-success">FINAL</div>
 						)}
 					</div>
 
@@ -116,29 +108,33 @@ export const LiveScoreboard: FC<LiveScoreboardProps> = ({
 						>
 							{game.awayTeam?.abbreviation || "AWAY"}
 						</div>
-						<div className="text-5xl font-bold tabular-nums">
+						<div className="text-5xl font-bold tabular-nums text-base-content">
 							{gameState.awayScore}
 						</div>
 						{gameState.possession === "away" && (
-							<div className="text-xs text-gray-600">● Possession</div>
+							<div className="text-xs text-base-content/60">● Possession</div>
 						)}
 					</div>
 				</div>
 
 				{/* Gender Ratio (Mixed divisions) */}
 				{game.genderRatioRequired && (
-					<div className="pt-4 border-t border-gray-200">
+					<div className="pt-4 border-t border-base-300">
 						<div className="grid grid-cols-2 gap-4 text-sm">
 							<div className="text-center">
-								<div className="text-gray-600 text-xs mb-1">Gender Ratio</div>
-								<div className="font-medium">
+								<div className="text-base-content/60 text-xs mb-1">
+									Gender Ratio
+								</div>
+								<div className="font-medium text-base-content">
 									{gameState.homeGenderRatio?.male || 0}M /{" "}
 									{gameState.homeGenderRatio?.female || 0}F
 								</div>
 							</div>
 							<div className="text-center">
-								<div className="text-gray-600 text-xs mb-1">Gender Ratio</div>
-								<div className="font-medium">
+								<div className="text-base-content/60 text-xs mb-1">
+									Gender Ratio
+								</div>
+								<div className="font-medium text-base-content">
 									{gameState.awayGenderRatio?.male || 0}M /{" "}
 									{gameState.awayGenderRatio?.female || 0}F
 								</div>
@@ -148,14 +144,14 @@ export const LiveScoreboard: FC<LiveScoreboardProps> = ({
 				)}
 
 				{/* Game Info Row */}
-				<div className="pt-4 border-t border-gray-200">
+				<div className="pt-4 border-t border-base-300">
 					<div className="grid grid-cols-2 gap-4 text-sm text-center">
 						{/* Timeouts */}
 						<div>
-							<div className="text-gray-600 text-xs mb-1">
+							<div className="text-base-content/60 text-xs mb-1">
 								Timeouts Remaining
 							</div>
-							<div className="font-medium">
+							<div className="font-medium text-base-content">
 								{gameState.homeTimeoutsRemaining} -{" "}
 								{gameState.awayTimeoutsRemaining}
 							</div>
@@ -164,8 +160,12 @@ export const LiveScoreboard: FC<LiveScoreboardProps> = ({
 						{/* Target Score (Tournament format) */}
 						{game.format === "tournament" && game.ruleConfig.targetScore && (
 							<div>
-								<div className="text-gray-600 text-xs mb-1">Target Score</div>
-								<div className="font-medium">{game.ruleConfig.targetScore}</div>
+								<div className="text-base-content/60 text-xs mb-1">
+									Target Score
+								</div>
+								<div className="font-medium text-base-content">
+									{game.ruleConfig.targetScore}
+								</div>
 							</div>
 						)}
 
@@ -173,10 +173,10 @@ export const LiveScoreboard: FC<LiveScoreboardProps> = ({
 						{game.format === "professional" &&
 							game.ruleConfig.quarterLength && (
 								<div>
-									<div className="text-gray-600 text-xs mb-1">
+									<div className="text-base-content/60 text-xs mb-1">
 										Quarter Length
 									</div>
-									<div className="font-medium">
+									<div className="font-medium text-base-content">
 										{game.ruleConfig.quarterLength} min
 									</div>
 								</div>
@@ -185,8 +185,12 @@ export const LiveScoreboard: FC<LiveScoreboardProps> = ({
 						{/* Stall Count */}
 						{game.ruleConfig.stallCount && (
 							<div>
-								<div className="text-gray-600 text-xs mb-1">Stall Count</div>
-								<div className="font-medium">{game.ruleConfig.stallCount}</div>
+								<div className="text-base-content/60 text-xs mb-1">
+									Stall Count
+								</div>
+								<div className="font-medium text-base-content">
+									{game.ruleConfig.stallCount}
+								</div>
 							</div>
 						)}
 					</div>
@@ -194,7 +198,7 @@ export const LiveScoreboard: FC<LiveScoreboardProps> = ({
 
 				{/* Field Info (if available) */}
 				{game.fieldInfo && (
-					<div className="pt-4 border-t border-gray-200 text-xs text-gray-600 text-center">
+					<div className="pt-4 border-t border-base-300 text-xs text-base-content/60 text-center">
 						Field: {game.fieldInfo.length}yd × {game.fieldInfo.width}yd
 						{" • "}
 						End zones: {game.fieldInfo.endZoneDepth}yd

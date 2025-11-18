@@ -178,11 +178,11 @@ function NewGamePage() {
 		return (
 			<div className="max-w-4xl mx-auto px-4 py-8">
 				<div className="animate-pulse">
-					<div className="h-8 bg-slate-700 rounded w-1/4 mb-8" />
-					<div className="bg-slate-800 rounded-lg p-8 space-y-6">
-						<div className="h-10 bg-slate-700 rounded w-1/3" />
-						<div className="h-20 bg-slate-700 rounded" />
-						<div className="h-20 bg-slate-700 rounded" />
+					<div className="h-8 bg-base-300 rounded w-1/4 mb-8" />
+					<div className="card bg-base-200 p-8 space-y-6">
+						<div className="h-10 bg-base-300 rounded w-1/3" />
+						<div className="h-20 bg-base-300 rounded" />
+						<div className="h-20 bg-base-300 rounded" />
 					</div>
 				</div>
 			</div>
@@ -195,23 +195,25 @@ function NewGamePage() {
 				<div className="mb-8">
 					<Link
 						to="/admin/games"
-						className="text-cyan-400 hover:text-cyan-300 font-medium inline-flex items-center gap-2"
+						className="link link-primary font-medium inline-flex items-center gap-2"
 					>
 						← Back to Games
 					</Link>
 				</div>
-				<div className="bg-red-500/10 border border-red-500/50 rounded-lg p-8 text-center">
-					<AlertCircle className="mx-auto mb-4 text-red-400" size={48} />
-					<h2 className="text-2xl font-bold text-white mb-2">No Teams Found</h2>
-					<p className="text-gray-300 mb-4">
-						You need to create teams before you can create a game.
-					</p>
-					<Link
-						to="/admin/teams"
-						className="inline-flex items-center px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-lg transition-colors"
-					>
-						Go to Teams Management
-					</Link>
+				<div className="alert alert-error">
+					<AlertCircle
+						className="stroke-current shrink-0 h-12 w-12"
+						size={48}
+					/>
+					<div>
+						<h2 className="text-2xl font-bold mb-2">No Teams Found</h2>
+						<p className="mb-4">
+							You need to create teams before you can create a game.
+						</p>
+						<Link to="/admin/teams" className="btn btn-primary">
+							Go to Teams Management
+						</Link>
+					</div>
 				</div>
 			</div>
 		);
@@ -223,7 +225,7 @@ function NewGamePage() {
 			<div className="mb-8">
 				<Link
 					to="/admin/games"
-					className="text-cyan-400 hover:text-cyan-300 font-medium inline-flex items-center gap-2"
+					className="link link-primary font-medium inline-flex items-center gap-2"
 				>
 					← Back to Games
 				</Link>
@@ -231,26 +233,26 @@ function NewGamePage() {
 
 			{/* Form */}
 			<form onSubmit={handleSubmit}>
-				<div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700 p-8 space-y-8">
+				<div className="card bg-base-200 shadow-xl p-8 space-y-8">
 					<div>
-						<h1 className="text-3xl font-bold text-white mb-2">
+						<h1 className="text-3xl font-bold text-base-content mb-2">
 							Create New Game
 						</h1>
-						<p className="text-gray-400">
+						<p className="text-base-content/70">
 							Set up a new game with format-specific configurations
 						</p>
 					</div>
 
 					{/* Error Message */}
 					{error && (
-						<div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-start gap-3">
+						<div className="alert alert-error">
 							<AlertCircle
-								className="text-red-500 flex-shrink-0 mt-0.5"
+								className="stroke-current shrink-0 h-6 w-6"
 								size={20}
 							/>
 							<div>
-								<h3 className="font-semibold text-red-400 mb-1">Error</h3>
-								<p className="text-red-300 text-sm">{error}</p>
+								<h3 className="font-bold">Error</h3>
+								<div className="text-xs">{error}</div>
 							</div>
 						</div>
 					)}
@@ -258,8 +260,10 @@ function NewGamePage() {
 					{/* Game Format */}
 					<div className="space-y-4">
 						<div className="flex items-center gap-2">
-							<Settings className="text-cyan-400" size={20} />
-							<h2 className="text-xl font-bold text-white">Game Format</h2>
+							<Settings className="text-primary" size={20} />
+							<h2 className="text-xl font-bold text-base-content">
+								Game Format
+							</h2>
 						</div>
 						<div className="grid grid-cols-3 gap-4">
 							{(["professional", "tournament", "recreational"] as const).map(
@@ -268,21 +272,11 @@ function NewGamePage() {
 										key={fmt}
 										type="button"
 										onClick={() => setFormat(fmt)}
-										className={`p-4 rounded-lg border-2 transition-all ${
-											format === fmt
-												? "border-cyan-500 bg-cyan-500/10"
-												: "border-slate-600 bg-slate-700/50 hover:border-slate-500"
-										}`}
+										className={`btn ${format === fmt ? "btn-active btn-primary" : "btn-outline"}`}
 									>
-										<div className="text-center">
-											<div
-												className={`font-bold mb-1 capitalize ${
-													format === fmt ? "text-cyan-400" : "text-white"
-												}`}
-											>
-												{fmt}
-											</div>
-											<div className="text-xs text-gray-400">
+										<div className="text-center w-full">
+											<div className="font-bold mb-1 capitalize">{fmt}</div>
+											<div className="text-xs opacity-70">
 												{fmt === "professional"
 													? "Quarters, 12min"
 													: fmt === "tournament"
@@ -299,18 +293,18 @@ function NewGamePage() {
 					{/* Teams */}
 					<div className="space-y-4">
 						<div className="flex items-center gap-2">
-							<Users className="text-cyan-400" size={20} />
-							<h2 className="text-xl font-bold text-white">Teams</h2>
+							<Users className="text-primary" size={20} />
+							<h2 className="text-xl font-bold text-base-content">Teams</h2>
 						</div>
 						<div className="grid md:grid-cols-2 gap-4">
 							<div>
-								<label className="block text-sm font-medium text-gray-300 mb-2">
-									Home Team *
+								<label className="label">
+									<span className="label-text">Home Team *</span>
 								</label>
 								<select
 									value={homeTeamId}
 									onChange={(e) => setHomeTeamId(e.target.value as Id<"teams">)}
-									className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+									className="select select-bordered w-full"
 									required
 								>
 									<option value="">Select home team...</option>
@@ -322,13 +316,13 @@ function NewGamePage() {
 								</select>
 							</div>
 							<div>
-								<label className="block text-sm font-medium text-gray-300 mb-2">
-									Away Team *
+								<label className="label">
+									<span className="label-text">Away Team *</span>
 								</label>
 								<select
 									value={awayTeamId}
 									onChange={(e) => setAwayTeamId(e.target.value as Id<"teams">)}
-									className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+									className="select select-bordered w-full"
 									required
 								>
 									<option value="">Select away team...</option>
@@ -340,63 +334,65 @@ function NewGamePage() {
 								</select>
 							</div>
 						</div>
-						<label className="flex items-center gap-2 text-gray-300">
+						<label className="label cursor-pointer">
+							<span className="label-text">
+								Mixed division (gender ratio required)
+							</span>
 							<input
 								type="checkbox"
 								checked={genderRatioRequired}
 								onChange={(e) => setGenderRatioRequired(e.target.checked)}
-								className="w-4 h-4 text-cyan-500 bg-slate-700 border-slate-600 rounded focus:ring-cyan-500"
+								className="checkbox checkbox-primary"
 							/>
-							<span className="text-sm">
-								Mixed division (gender ratio required)
-							</span>
 						</label>
 					</div>
 
 					{/* Date, Time & Location */}
 					<div className="space-y-4">
 						<div className="flex items-center gap-2">
-							<Calendar className="text-cyan-400" size={20} />
-							<h2 className="text-xl font-bold text-white">
+							<Calendar className="text-primary" size={20} />
+							<h2 className="text-xl font-bold text-base-content">
 								Schedule & Location
 							</h2>
 						</div>
 						<div className="grid md:grid-cols-3 gap-4">
 							<div>
-								<label className="block text-sm font-medium text-gray-300 mb-2">
-									Date *
+								<label className="label">
+									<span className="label-text">Date *</span>
 								</label>
 								<input
 									type="date"
 									value={date}
 									onChange={(e) => setDate(e.target.value)}
-									className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+									className="input input-bordered w-full"
 									required
 								/>
 							</div>
 							<div>
-								<label className="block text-sm font-medium text-gray-300 mb-2">
-									Time *
+								<label className="label">
+									<span className="label-text">Time *</span>
 								</label>
 								<input
 									type="time"
 									value={time}
 									onChange={(e) => setTime(e.target.value)}
-									className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+									className="input input-bordered w-full"
 									required
 								/>
 							</div>
 							<div className="md:col-span-3">
-								<label className="block text-sm font-medium text-gray-300 mb-2">
-									<MapPin className="inline mr-1" size={16} />
-									Venue *
+								<label className="label">
+									<span className="label-text">
+										<MapPin className="inline mr-1" size={16} />
+										Venue *
+									</span>
 								</label>
 								<input
 									type="text"
 									value={venue}
 									onChange={(e) => setVenue(e.target.value)}
 									placeholder="e.g. National Sports Complex Field 3"
-									className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+									className="input input-bordered w-full"
 									required
 								/>
 							</div>
@@ -406,23 +402,25 @@ function NewGamePage() {
 					{/* Format-Specific Rules */}
 					<div className="space-y-4">
 						<div className="flex items-center gap-2">
-							<Settings className="text-cyan-400" size={20} />
-							<h2 className="text-xl font-bold text-white">Game Rules</h2>
+							<Settings className="text-primary" size={20} />
+							<h2 className="text-xl font-bold text-base-content">
+								Game Rules
+							</h2>
 						</div>
 
-						<div className="bg-slate-700/50 rounded-lg p-6 space-y-4">
+						<div className="card bg-base-300 p-6 space-y-4">
 							{/* Common Rules */}
 							<div className="grid md:grid-cols-2 gap-4">
 								<div>
-									<label className="block text-sm font-medium text-gray-300 mb-2">
-										Stall Count
+									<label className="label">
+										<span className="label-text">Stall Count</span>
 									</label>
 									<select
 										value={stallCount}
 										onChange={(e) =>
 											setStallCount(Number(e.target.value) as 6 | 7 | 10)
 										}
-										className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+										className="select select-bordered w-full"
 									>
 										<option value={6}>6 seconds</option>
 										<option value={7}>7 seconds</option>
@@ -430,8 +428,8 @@ function NewGamePage() {
 									</select>
 								</div>
 								<div>
-									<label className="block text-sm font-medium text-gray-300 mb-2">
-										Timeouts Per Half
+									<label className="label">
+										<span className="label-text">Timeouts Per Half</span>
 									</label>
 									<input
 										type="number"
@@ -439,7 +437,7 @@ function NewGamePage() {
 										onChange={(e) => setTimeoutsPerHalf(Number(e.target.value))}
 										min={0}
 										max={5}
-										className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+										className="input input-bordered w-full"
 									/>
 								</div>
 							</div>
@@ -447,8 +445,8 @@ function NewGamePage() {
 							{/* Professional: Quarters */}
 							{format === "professional" && (
 								<div>
-									<label className="block text-sm font-medium text-gray-300 mb-2">
-										Quarter Length (minutes)
+									<label className="label">
+										<span className="label-text">Quarter Length (minutes)</span>
 									</label>
 									<input
 										type="number"
@@ -456,7 +454,7 @@ function NewGamePage() {
 										onChange={(e) => setQuarterLength(Number(e.target.value))}
 										min={8}
 										max={15}
-										className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+										className="input input-bordered w-full"
 									/>
 								</div>
 							)}
@@ -465,13 +463,13 @@ function NewGamePage() {
 							{format === "tournament" && (
 								<>
 									<div>
-										<label className="block text-sm font-medium text-gray-300 mb-2">
-											Target Score
+										<label className="label">
+											<span className="label-text">Target Score</span>
 										</label>
 										<select
 											value={targetScore}
 											onChange={(e) => setTargetScore(Number(e.target.value))}
-											className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+											className="select select-bordered w-full"
 										>
 											<option value={11}>11 points</option>
 											<option value={13}>13 points</option>
@@ -479,23 +477,23 @@ function NewGamePage() {
 										</select>
 									</div>
 
-									<label className="flex items-center gap-2 text-gray-300">
+									<label className="label cursor-pointer">
+										<span className="label-text font-medium">
+											Enable time caps
+										</span>
 										<input
 											type="checkbox"
 											checked={useSoftCap}
 											onChange={(e) => setUseSoftCap(e.target.checked)}
-											className="w-4 h-4 text-cyan-500 bg-slate-600 border-slate-500 rounded focus:ring-cyan-500"
+											className="checkbox checkbox-primary"
 										/>
-										<span className="text-sm font-medium">
-											Enable time caps
-										</span>
 									</label>
 
 									{useSoftCap && (
 										<div className="grid md:grid-cols-2 gap-4 pl-6">
 											<div>
-												<label className="block text-sm font-medium text-gray-300 mb-2">
-													Soft Cap (minutes)
+												<label className="label">
+													<span className="label-text">Soft Cap (minutes)</span>
 												</label>
 												<input
 													type="number"
@@ -505,12 +503,12 @@ function NewGamePage() {
 													}
 													min={60}
 													max={120}
-													className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+													className="input input-bordered w-full"
 												/>
 											</div>
 											<div>
-												<label className="block text-sm font-medium text-gray-300 mb-2">
-													Hard Cap (minutes)
+												<label className="label">
+													<span className="label-text">Hard Cap (minutes)</span>
 												</label>
 												<input
 													type="number"
@@ -520,7 +518,7 @@ function NewGamePage() {
 													}
 													min={75}
 													max={150}
-													className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+													className="input input-bordered w-full"
 												/>
 											</div>
 										</div>
@@ -531,8 +529,8 @@ function NewGamePage() {
 							{/* Recreational: Halves */}
 							{format === "recreational" && (
 								<div>
-									<label className="block text-sm font-medium text-gray-300 mb-2">
-										Half Length (minutes)
+									<label className="label">
+										<span className="label-text">Half Length (minutes)</span>
 									</label>
 									<input
 										type="number"
@@ -540,14 +538,14 @@ function NewGamePage() {
 										onChange={(e) => setHalfLength(Number(e.target.value))}
 										min={20}
 										max={40}
-										className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+										className="input input-bordered w-full"
 									/>
 								</div>
 							)}
 
 							<div>
-								<label className="block text-sm font-medium text-gray-300 mb-2">
-									Timeout Duration (seconds)
+								<label className="label">
+									<span className="label-text">Timeout Duration (seconds)</span>
 								</label>
 								<input
 									type="number"
@@ -556,7 +554,7 @@ function NewGamePage() {
 									min={30}
 									max={120}
 									step={10}
-									className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+									className="input input-bordered w-full"
 								/>
 							</div>
 						</div>
@@ -564,24 +562,24 @@ function NewGamePage() {
 
 					{/* Optional Field Info */}
 					<div className="space-y-4">
-						<label className="flex items-center gap-2 text-gray-300">
+						<label className="label cursor-pointer">
+							<span className="label-text font-medium">
+								Include field dimensions (optional)
+							</span>
 							<input
 								type="checkbox"
 								checked={includeFieldInfo}
 								onChange={(e) => setIncludeFieldInfo(e.target.checked)}
-								className="w-4 h-4 text-cyan-500 bg-slate-700 border-slate-600 rounded focus:ring-cyan-500"
+								className="checkbox checkbox-primary"
 							/>
-							<span className="text-sm font-medium">
-								Include field dimensions (optional)
-							</span>
 						</label>
 
 						{includeFieldInfo && (
-							<div className="bg-slate-700/50 rounded-lg p-6 space-y-4">
+							<div className="card bg-base-300 p-6 space-y-4">
 								<div className="grid md:grid-cols-2 gap-4">
 									<div>
-										<label className="block text-sm font-medium text-gray-300 mb-2">
-											Field Length (yards)
+										<label className="label">
+											<span className="label-text">Field Length (yards)</span>
 										</label>
 										<input
 											type="number"
@@ -589,12 +587,12 @@ function NewGamePage() {
 											onChange={(e) => setFieldLength(Number(e.target.value))}
 											min={80}
 											max={120}
-											className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+											className="input input-bordered w-full"
 										/>
 									</div>
 									<div>
-										<label className="block text-sm font-medium text-gray-300 mb-2">
-											Field Width (yards)
+										<label className="label">
+											<span className="label-text">Field Width (yards)</span>
 										</label>
 										<input
 											type="number"
@@ -602,12 +600,12 @@ function NewGamePage() {
 											onChange={(e) => setFieldWidth(Number(e.target.value))}
 											min={30}
 											max={50}
-											className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+											className="input input-bordered w-full"
 										/>
 									</div>
 									<div>
-										<label className="block text-sm font-medium text-gray-300 mb-2">
-											End Zone Depth (yards)
+										<label className="label">
+											<span className="label-text">End Zone Depth (yards)</span>
 										</label>
 										<input
 											type="number"
@@ -615,17 +613,17 @@ function NewGamePage() {
 											onChange={(e) => setEndZoneDepth(Number(e.target.value))}
 											min={15}
 											max={30}
-											className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+											className="input input-bordered w-full"
 										/>
 									</div>
 									<div>
-										<label className="block text-sm font-medium text-gray-300 mb-2">
-											Surface Type
+										<label className="label">
+											<span className="label-text">Surface Type</span>
 										</label>
 										<select
 											value={surface}
 											onChange={(e) => setSurface(e.target.value)}
-											className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+											className="select select-bordered w-full"
 										>
 											<option value="grass">Grass</option>
 											<option value="turf">Turf</option>
@@ -639,38 +637,45 @@ function NewGamePage() {
 					</div>
 
 					{/* Submit Buttons */}
-					<div className="flex gap-4 pt-6 border-t border-slate-700">
-						<Link
-							to="/admin/games"
-							className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors text-center"
-						>
+					<div className="card-actions pt-6 border-t border-base-300">
+						<Link to="/admin/games" className="btn btn-ghost flex-1">
 							Cancel
 						</Link>
 						<button
 							type="submit"
 							disabled={isSubmitting || !homeTeamId || !awayTeamId}
-							onClick={() => {
-								console.log("Button clicked!");
-								console.log("isSubmitting:", isSubmitting);
-								console.log("homeTeamId:", homeTeamId);
-								console.log("awayTeamId:", awayTeamId);
-								console.log(
-									"Button disabled:",
-									isSubmitting || !homeTeamId || !awayTeamId,
-								);
-							}}
-							className="flex-1 px-6 py-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+							className="btn btn-primary flex-1"
 						>
-							{isSubmitting ? "Creating Game..." : "Create Game"}
+							{isSubmitting ? (
+								<>
+									<span className="loading loading-spinner loading-sm"></span>
+									Creating Game...
+								</>
+							) : (
+								"Create Game"
+							)}
 						</button>
 					</div>
 
 					{/* Debug info */}
 					{(!homeTeamId || !awayTeamId) && (
-						<div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/50 rounded-lg">
-							<p className="text-yellow-400 text-sm">
+						<div className="alert alert-warning mt-4">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								className="stroke-current shrink-0 h-6 w-6"
+								fill="none"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth="2"
+									d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+								/>
+							</svg>
+							<span className="text-sm">
 								⚠️ Button is disabled: Please select both teams to continue
-							</p>
+							</span>
 						</div>
 					)}
 				</div>

@@ -55,7 +55,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 	const isDevelopment = import.meta.env.DEV;
 
 	return (
-		<html lang="en">
+		<html lang="en" data-theme="forest">
 			<head>
 				<HeadContent />
 			</head>

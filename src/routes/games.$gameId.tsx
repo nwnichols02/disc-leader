@@ -40,15 +40,28 @@ export const Route = createFileRoute("/games/$gameId")({
 	// Pending component while loading
 	pendingComponent: () => (
 		<div className="flex items-center justify-center min-h-screen">
-			<div className="text-lg">Loading game...</div>
+			<span className="loading loading-spinner loading-lg text-primary"></span>
 		</div>
 	),
 
 	// Error component
 	errorComponent: ({ error }) => (
 		<div className="flex items-center justify-center min-h-screen">
-			<div className="text-lg text-red-600">
-				Error loading game: {error.message}
+			<div className="alert alert-error">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					className="stroke-current shrink-0 h-6 w-6"
+					fill="none"
+					viewBox="0 0 24 24"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						strokeWidth="2"
+						d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+					/>
+				</svg>
+				<span>Error loading game: {error.message}</span>
 			</div>
 		</div>
 	),
@@ -121,21 +134,21 @@ function GamePage() {
 	if (!displayGame) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
-				<div className="text-lg">Loading game...</div>
+				<span className="loading loading-spinner loading-lg text-primary"></span>
 			</div>
 		);
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-base-100">
 			{/* Header */}
-			<header className="bg-white border-b border-gray-200 px-4 py-3">
-				<div className="max-w-4xl mx-auto flex items-center justify-between">
+			<header className="navbar bg-base-200 border-b border-base-300 px-4 py-3">
+				<div className="max-w-4xl mx-auto flex items-center justify-between w-full">
 					<div>
-						<h1 className="text-xl font-bold text-gray-900">
+						<h1 className="text-xl font-bold text-base-content">
 							{displayGame.homeTeam?.name} vs {displayGame.awayTeam?.name}
 						</h1>
-						<p className="text-sm text-gray-600 mt-1">
+						<p className="text-sm text-base-content/70 mt-1">
 							{displayGame.venue || "Venue TBA"}
 						</p>
 					</div>
@@ -143,7 +156,7 @@ function GamePage() {
 					{(displayGame.streamId || displayGame.webRtcPlaybackUrl) && (
 						<button
 							onClick={() => setShowVideo(!showVideo)}
-							className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+							className="btn btn-ghost btn-sm"
 							title={showVideo ? "Hide video" : "Show video"}
 						>
 							{showVideo ? (
@@ -187,14 +200,12 @@ function GamePage() {
 				/>
 
 				{/* Play-by-Play */}
-				<div className="bg-white rounded-lg shadow-sm border border-gray-200">
-					<div className="px-6 py-4 border-b border-gray-200">
-						<h2 className="text-lg font-semibold text-gray-900">
-							Play-by-Play
-						</h2>
+				<div className="card bg-base-200 shadow-lg">
+					<div className="card-header px-6 py-4 border-b border-base-300">
+						<h2 className="card-title text-base-content">Play-by-Play</h2>
 					</div>
 
-					<div className="divide-y divide-gray-200">
+					<div className="divide-y divide-base-300">
 						{eventsWithScores.length > 0 ? (
 							// Display in reverse chronological order (newest first)
 							// eventsWithScores is already in chronological order, so reverse it
@@ -211,7 +222,7 @@ function GamePage() {
 									return (
 										<div
 											key={event._id}
-											className="px-6 py-3 hover:bg-gray-50 transition-colors"
+											className="px-6 py-3 hover:bg-base-300 transition-colors"
 										>
 											<div className="flex items-start justify-between gap-4">
 												<div className="flex-1 min-w-0">
@@ -222,19 +233,21 @@ function GamePage() {
 															</span>
 														)}
 														<div className="flex-1 min-w-0">
-															<p className="text-sm text-gray-900">
+															<p className="text-sm text-base-content">
 																{formatEventDescription(event, teamName)}
 															</p>
 															<div className="flex items-center gap-2 mt-1.5">
-																<p className="text-xs text-gray-500">
+																<p className="text-xs text-base-content/60">
 																	{formatGameTime(
 																		event,
 																		displayGame.format,
 																		event.scoreAtEvent,
 																	)}
 																</p>
-																<span className="text-xs text-gray-300">•</span>
-																<p className="text-xs text-gray-500">
+																<span className="text-xs text-base-content/30">
+																	•
+																</span>
+																<p className="text-xs text-base-content/60">
 																	{formatTimestamp(event.timestamp)}
 																</p>
 															</div>
@@ -242,7 +255,7 @@ function GamePage() {
 													</div>
 												</div>
 												{event.type === "goal" && (
-													<div className="ml-4 text-xs font-semibold text-green-600 whitespace-nowrap">
+													<div className="ml-4 text-xs font-semibold text-success whitespace-nowrap">
 														GOAL
 													</div>
 												)}
@@ -251,7 +264,7 @@ function GamePage() {
 									);
 								})
 						) : (
-							<div className="px-6 py-8 text-center text-gray-600">
+							<div className="px-6 py-8 text-center text-base-content/60">
 								No events yet
 							</div>
 						)}

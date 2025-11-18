@@ -22,7 +22,7 @@ export function UpgradeButton({
 
 	if (hasProduct) {
 		return (
-			<span className="inline-flex items-center gap-2 text-green-600 font-medium">
+			<span className="inline-flex items-center gap-2 text-success font-medium">
 				<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
 					<path
 						fillRule="evenodd"
@@ -36,15 +36,15 @@ export function UpgradeButton({
 	}
 
 	const variantClasses = {
-		primary: "bg-blue-600 text-white hover:bg-blue-700",
-		secondary: "bg-gray-600 text-white hover:bg-gray-700",
-		outline: "border border-gray-300 text-gray-700 hover:bg-gray-50",
+		primary: "btn-primary",
+		secondary: "btn-secondary",
+		outline: "btn-outline",
 	};
 
 	const sizeClasses = {
-		sm: "px-3 py-1.5 text-sm",
-		md: "px-4 py-2 text-base",
-		lg: "px-6 py-3 text-lg",
+		sm: "btn-sm",
+		md: "",
+		lg: "btn-lg",
 	};
 
 	return (
@@ -55,7 +55,7 @@ export function UpgradeButton({
 					dialog: CheckoutDialog,
 				});
 			}}
-			className={`rounded-lg font-medium transition-colors ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+			className={`btn ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
 		>
 			Upgrade to {productId === "pro" ? "Pro" : "Premium"}
 		</button>

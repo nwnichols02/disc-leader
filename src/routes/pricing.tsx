@@ -83,10 +83,7 @@ function PricingPage() {
 
 		if (hasProduct) {
 			return (
-				<button
-					disabled
-					className="w-full px-6 py-3 rounded-lg font-medium border-2 border-green-500 text-green-600 bg-green-50"
-				>
+				<button disabled className="btn btn-success w-full">
 					✓ Current Plan
 				</button>
 			);
@@ -94,10 +91,7 @@ function PricingPage() {
 
 		if (plan.id === "free") {
 			return (
-				<button
-					disabled
-					className="w-full px-6 py-3 rounded-lg font-medium border-2 border-gray-300 text-gray-600 bg-gray-50"
-				>
+				<button disabled className="btn btn-disabled w-full">
 					Free Plan
 				</button>
 			);
@@ -123,62 +117,65 @@ function PricingPage() {
 					}
 				}}
 				disabled={processingPlan === plan.id}
-				className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
+				className={`btn w-full ${
 					processingPlan === plan.id
-						? "bg-gray-400 cursor-not-allowed"
+						? "btn-disabled"
 						: plan.highlighted
-							? "bg-blue-600 text-white hover:bg-blue-700"
-							: "border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+							? "btn-primary"
+							: "btn-outline btn-primary"
 				}`}
 			>
-				{processingPlan === plan.id ? "Processing..." : plan.cta}
+				{processingPlan === plan.id ? (
+					<>
+						<span className="loading loading-spinner loading-sm"></span>
+						Processing...
+					</>
+				) : (
+					plan.cta
+				)}
 			</button>
 		);
 	};
 
 	return (
-		<div className="min-h-screen bg-gray-50 py-12 px-4">
+		<div className="min-h-screen bg-base-100 py-12 px-4">
 			<div className="max-w-7xl mx-auto">
 				{/* Error Banner */}
 				{error && (
-					<div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-						<div className="flex items-center gap-3">
-							<svg
-								className="w-5 h-5 text-red-600"
-								fill="currentColor"
-								viewBox="0 0 20 20"
-							>
-								<path
-									fillRule="evenodd"
-									d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-									clipRule="evenodd"
-								/>
-							</svg>
-							<div>
-								<h3 className="text-sm font-semibold text-red-800">
-									Checkout Error
-								</h3>
-								<p className="text-sm text-red-700">{error}</p>
-								<p className="text-xs text-red-600 mt-1">
-									Check the browser console for more details.
-								</p>
-							</div>
+					<div className="alert alert-error mb-6">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							className="stroke-current shrink-0 h-6 w-6"
+							fill="none"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth="2"
+								d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+						<div>
+							<h3 className="font-bold">Checkout Error</h3>
+							<div className="text-xs">{error}</div>
 						</div>
 					</div>
 				)}
 
 				{/* Loading State */}
 				{customerLoading && (
-					<div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-						<p className="text-blue-700">Loading customer data...</p>
+					<div className="alert alert-info mb-6">
+						<span className="loading loading-spinner loading-sm"></span>
+						<span>Loading customer data...</span>
 					</div>
 				)}
 
 				<div className="text-center mb-12">
-					<h1 className="text-4xl font-bold text-gray-900 mb-4">
+					<h1 className="text-4xl font-bold text-base-content mb-4">
 						Choose Your Plan
 					</h1>
-					<p className="text-xl text-gray-600">
+					<p className="text-xl text-base-content/70">
 						Upgrade to unlock more features and take your disc golf game to the
 						next level
 					</p>
@@ -188,29 +185,31 @@ function PricingPage() {
 					{plans.map((plan) => (
 						<div
 							key={plan.id}
-							className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-transform hover:scale-105 ${
-								plan.highlighted ? "ring-4 ring-blue-500 relative" : ""
+							className={`card bg-base-200 shadow-xl overflow-hidden transition-transform hover:scale-105 ${
+								plan.highlighted ? "ring-4 ring-primary relative" : ""
 							}`}
 						>
 							{plan.highlighted && (
-								<div className="bg-blue-600 text-white text-center py-2 text-sm font-semibold">
+								<div className="badge badge-primary w-full rounded-none">
 									MOST POPULAR
 								</div>
 							)}
 
-							<div className="p-8">
-								<h2 className="text-2xl font-bold text-gray-900 mb-2">
+							<div className="card-body p-8">
+								<h2 className="card-title text-2xl text-base-content mb-2">
 									{plan.name}
 								</h2>
-								<p className="text-gray-600 mb-6 min-h-[3rem]">
+								<p className="text-base-content/70 mb-6 min-h-[3rem]">
 									{plan.description}
 								</p>
 
 								<div className="mb-6">
-									<span className="text-5xl font-bold text-gray-900">
+									<span className="text-5xl font-bold text-base-content">
 										{plan.price}
 									</span>
-									<span className="text-gray-600 ml-2">{plan.period}</span>
+									<span className="text-base-content/70 ml-2">
+										{plan.period}
+									</span>
 								</div>
 
 								{getButtonForPlan(plan)}
@@ -220,7 +219,7 @@ function PricingPage() {
 										<div key={idx} className="flex items-start gap-3">
 											{feature.included ? (
 												<svg
-													className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
+													className="w-5 h-5 text-success flex-shrink-0 mt-0.5"
 													fill="currentColor"
 													viewBox="0 0 20 20"
 												>
@@ -232,7 +231,7 @@ function PricingPage() {
 												</svg>
 											) : (
 												<svg
-													className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5"
+													className="w-5 h-5 text-base-content/30 flex-shrink-0 mt-0.5"
 													fill="currentColor"
 													viewBox="0 0 20 20"
 												>
@@ -245,7 +244,9 @@ function PricingPage() {
 											)}
 											<span
 												className={
-													feature.included ? "text-gray-700" : "text-gray-400"
+													feature.included
+														? "text-base-content"
+														: "text-base-content/50"
 												}
 											>
 												{feature.text}
@@ -258,7 +259,7 @@ function PricingPage() {
 					))}
 				</div>
 
-				<div className="mt-12 text-center text-gray-600">
+				<div className="mt-12 text-center text-base-content/70">
 					<p className="mb-2">
 						All plans include a 14-day money-back guarantee
 					</p>
@@ -266,7 +267,7 @@ function PricingPage() {
 						Questions? Contact us at{" "}
 						<a
 							href="mailto:support@discleader.com"
-							className="text-blue-600 hover:underline"
+							className="link link-primary"
 						>
 							support@discleader.com
 						</a>

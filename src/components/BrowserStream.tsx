@@ -70,7 +70,13 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 
 	// Canvas rendering loop
 	useEffect(() => {
-		if (!useCanvas || !canvasRef.current || !videoRef.current || !hasAccess || !mediaStreamRef.current) {
+		if (
+			!useCanvas ||
+			!canvasRef.current ||
+			!videoRef.current ||
+			!hasAccess ||
+			!mediaStreamRef.current
+		) {
 			return;
 		}
 
@@ -97,7 +103,7 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 		if (canvas.captureStream && mediaStreamRef.current) {
 			try {
 				canvasStream = canvas.captureStream(30); // 30 FPS
-				
+
 				// Add audio tracks from the original media stream to canvas stream
 				// Canvas only captures video, so we need to add audio separately
 				if (canvasStream) {
@@ -105,7 +111,7 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 					audioTracks.forEach((track) => {
 						canvasStream!.addTrack(track);
 					});
-					
+
 					canvasStreamRef.current = canvasStream;
 					onCanvasStreamReadyRef.current?.(canvasStream);
 				}
@@ -116,7 +122,11 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 
 		// Render loop - continuously draw video frames to canvas
 		const drawFrame = () => {
-			if (video.readyState >= video.HAVE_CURRENT_DATA && video.videoWidth > 0 && video.videoHeight > 0) {
+			if (
+				video.readyState >= video.HAVE_CURRENT_DATA &&
+				video.videoWidth > 0 &&
+				video.videoHeight > 0
+			) {
 				updateCanvasSize();
 				// Clear canvas before drawing to avoid artifacts
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -141,12 +151,12 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 
 		video.addEventListener("loadedmetadata", handleLoadedMetadata);
 		video.addEventListener("canplay", handleCanPlay);
-		
+
 		// Start immediately if video is already ready
 		if (video.readyState >= video.HAVE_METADATA) {
 			handleLoadedMetadata();
 		}
-		
+
 		// Also start if video can play
 		if (video.readyState >= video.HAVE_CURRENT_DATA) {
 			handleCanPlay();
@@ -224,7 +234,6 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 		}
 	};
 
-
 	// Setup camera - requests camera access
 	const setupCamera = async () => {
 		if (isRequestingAccess || hasAccess) return;
@@ -249,11 +258,17 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 						} else {
 							const onLoadedMetadata = () => {
 								if (videoRef.current) {
-									videoRef.current.removeEventListener('loadedmetadata', onLoadedMetadata);
+									videoRef.current.removeEventListener(
+										"loadedmetadata",
+										onLoadedMetadata,
+									);
 								}
 								resolve();
 							};
-							videoRef.current.addEventListener('loadedmetadata', onLoadedMetadata);
+							videoRef.current.addEventListener(
+								"loadedmetadata",
+								onLoadedMetadata,
+							);
 							// Timeout after 2 seconds
 							setTimeout(resolve, 2000);
 						}
@@ -263,7 +278,7 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 				});
 			}
 			// Additional wait for canvas stream to be created
-			await new Promise(resolve => setTimeout(resolve, 300));
+			await new Promise((resolve) => setTimeout(resolve, 300));
 		}
 
 		setIsRequestingAccess(false);
@@ -296,7 +311,9 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 
 			// Verify media stream is still active
 			if (mediaStreamRef.current) {
-				const activeTracks = mediaStreamRef.current.getTracks().filter(track => track.readyState === 'live');
+				const activeTracks = mediaStreamRef.current
+					.getTracks()
+					.filter((track) => track.readyState === "live");
 				if (activeTracks.length === 0) {
 					// Stream was stopped, re-request access
 					const stream = await requestMediaAccess();
@@ -315,28 +332,32 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 					let attempts = 0;
 					const maxAttempts = 20; // 2 seconds total
 					while (!canvasStreamRef.current && attempts < maxAttempts) {
-						await new Promise(resolve => setTimeout(resolve, 100));
+						await new Promise((resolve) => setTimeout(resolve, 100));
 						attempts++;
 					}
-					
+
 					if (!canvasStreamRef.current) {
-						throw new Error("Canvas stream not ready. Please wait a moment and try again.");
+						throw new Error(
+							"Canvas stream not ready. Please wait a moment and try again.",
+						);
 					}
-					
+
 					// Verify canvas stream has video tracks
 					const videoTracks = canvasStreamRef.current.getVideoTracks();
 					if (videoTracks.length === 0) {
 						throw new Error("Canvas stream has no video tracks");
 					}
-					
+
 					// Check if canvas is actually rendering (has dimensions)
 					if (canvasRef.current) {
 						const canvas = canvasRef.current;
 						if (canvas.width === 0 || canvas.height === 0) {
-							throw new Error("Canvas has no dimensions. Video may not be loaded yet.");
+							throw new Error(
+								"Canvas has no dimensions. Video may not be loaded yet.",
+							);
 						}
 					}
-					
+
 					return canvasStreamRef.current;
 				} else {
 					if (!mediaStreamRef.current) {
@@ -359,10 +380,10 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 			// Update state and notify parent - do this AFTER successful publish
 			setIsStreaming(true);
 			setIsLoading(false);
-			
+
 			// Notify parent of streaming state change FIRST
 			onStreamingStateChange?.(true);
-			
+
 			// Then call onStreamStart to update database
 			onStreamStart?.();
 		} catch (err) {
@@ -390,7 +411,7 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 			stopOperations.push(
 				whipClientRef.current.stop().catch((err) => {
 					console.error("Error stopping WHIP client:", err);
-				})
+				}),
 			);
 		}
 
@@ -415,7 +436,7 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 
 		// Clean up references after stopping
 		whipClientRef.current = null;
-		
+
 		// Clear media stream reference and update access state
 		// This ensures permissions are properly reset for next time
 		if (mediaStreamRef.current) {
@@ -430,10 +451,10 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 
 		// Update state and notify parent
 		setIsStreaming(false);
-		
+
 		// Notify parent of streaming state change FIRST
 		onStreamingStateChange?.(false);
-		
+
 		// Then call onStreamStop to update database
 		onStreamStop?.();
 	};
@@ -486,9 +507,7 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 			<div className="space-y-3">
 				{/* Header - Compact */}
 				<div className="flex items-center justify-between">
-					<h3 className="text-sm font-semibold text-gray-900">
-						Live Stream
-					</h3>
+					<h3 className="text-sm font-semibold text-gray-900">Live Stream</h3>
 					{error && (
 						<button
 							onClick={() => setError(null)}
@@ -507,7 +526,10 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 				)}
 
 				{/* Video Preview - Compact */}
-				<div className="relative bg-black rounded-lg overflow-hidden" style={{ aspectRatio: '16/9', maxHeight: '200px' }}>
+				<div
+					className="relative bg-black rounded-lg overflow-hidden"
+					style={{ aspectRatio: "16/9", maxHeight: "200px" }}
+				>
 					<video
 						ref={videoRef}
 						autoPlay
@@ -531,7 +553,9 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 						<div className="absolute inset-0 flex items-center justify-center bg-gray-900">
 							<div className="text-center text-white px-4">
 								<Video className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-								<p className="text-xs mb-2">Click "Setup Camera" to enable camera</p>
+								<p className="text-xs mb-2">
+									Click "Setup Camera" to enable camera
+								</p>
 							</div>
 						</div>
 					)}

@@ -156,19 +156,19 @@ function ImportTeamsPage() {
 			<div className="mb-8">
 				<Link
 					to="/admin/teams"
-					className="text-cyan-400 hover:text-cyan-300 font-medium inline-flex items-center gap-2 mb-4"
+					className="link link-primary font-medium inline-flex items-center gap-2 mb-4"
 				>
 					← Back to Teams
 				</Link>
 				<div className="flex items-center gap-3">
-					<div className="p-3 bg-cyan-500/10 rounded-lg">
-						<Download className="text-cyan-400" size={28} />
+					<div className="p-3 bg-primary/10 rounded-lg">
+						<Download className="text-primary" size={28} />
 					</div>
 					<div>
-						<h1 className="text-3xl font-bold text-white mb-2">
+						<h1 className="text-3xl font-bold text-base-content mb-2">
 							Import Teams from Website
 						</h1>
-						<p className="text-gray-400">
+						<p className="text-base-content/70">
 							Scrape team information from a website using Firecrawl
 						</p>
 					</div>
@@ -177,19 +177,13 @@ function ImportTeamsPage() {
 
 			{/* Error Message */}
 			{error && (
-				<div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-start gap-3 mb-6">
-					<AlertCircle
-						className="text-red-500 flex-shrink-0 mt-0.5"
-						size={20}
-					/>
+				<div className="alert alert-error mb-6">
+					<AlertCircle className="stroke-current shrink-0 h-6 w-6" size={20} />
 					<div className="flex-1">
-						<h3 className="font-semibold text-red-400 mb-1">Error</h3>
-						<p className="text-red-300 text-sm">{error}</p>
+						<h3 className="font-bold">Error</h3>
+						<div className="text-xs">{error}</div>
 					</div>
-					<button
-						onClick={() => setError("")}
-						className="text-red-400 hover:text-red-300"
-					>
+					<button onClick={() => setError("")} className="btn btn-sm btn-ghost">
 						<X size={20} />
 					</button>
 				</div>
@@ -197,45 +191,47 @@ function ImportTeamsPage() {
 
 			{/* Step 1: URL Input */}
 			{extractedTeams.length === 0 && !importResults && (
-				<div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700 p-8">
+				<div className="card bg-base-200 shadow-xl p-8">
 					<div className="space-y-6">
 						<div className="flex items-center gap-2">
-							<div className="w-8 h-8 rounded-full bg-cyan-500 text-white flex items-center justify-center font-bold">
+							<div className="w-8 h-8 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold">
 								1
 							</div>
-							<h2 className="text-xl font-bold text-white">
+							<h2 className="text-xl font-bold text-base-content">
 								Enter Website URL
 							</h2>
 						</div>
 
 						<form onSubmit={handleExtract} className="space-y-4">
 							<div>
-								<label className="block text-sm font-medium text-gray-300 mb-2">
-									Website URL
+								<label className="label">
+									<span className="label-text">Website URL</span>
 								</label>
 								<input
 									type="url"
 									value={url}
 									onChange={(e) => setUrl(e.target.value)}
 									placeholder="https://example.com/teams"
-									className="w-full px-4 py-3 bg-slate-600 border border-slate-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+									className="input input-bordered w-full"
 									required
 									disabled={isExtracting}
 								/>
-								<p className="mt-1 text-xs text-gray-400">
-									Enter the URL of a page containing ultimate frisbee team
-									information
-								</p>
+								<label className="label">
+									<span className="label-text-alt">
+										Enter the URL of a page containing ultimate frisbee team
+										information
+									</span>
+								</label>
 							</div>
 
 							<button
 								type="submit"
 								disabled={isExtracting || !url.trim()}
-								className="w-full px-6 py-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+								className="btn btn-primary w-full"
 							>
 								{isExtracting ? (
 									<>
-										<Loader2 className="animate-spin" size={20} />
+										<span className="loading loading-spinner loading-sm"></span>
 										Extracting Teams...
 									</>
 								) : (
@@ -252,26 +248,26 @@ function ImportTeamsPage() {
 
 			{/* Step 2: Review Teams */}
 			{extractedTeams.length > 0 && !importResults && (
-				<div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700 p-8 space-y-6">
+				<div className="card bg-base-200 shadow-xl p-8 space-y-6">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-2">
-							<div className="w-8 h-8 rounded-full bg-cyan-500 text-white flex items-center justify-center font-bold">
+							<div className="w-8 h-8 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold">
 								2
 							</div>
-							<h2 className="text-xl font-bold text-white">
+							<h2 className="text-xl font-bold text-base-content">
 								Review Extracted Teams
 							</h2>
 						</div>
 						<div className="flex items-center gap-4">
 							<button
 								onClick={toggleAllTeams}
-								className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
+								className="link link-primary text-sm font-medium"
 							>
 								{selectedTeams.size === extractedTeams.length
 									? "Deselect All"
 									: "Select All"}
 							</button>
-							<span className="text-sm text-gray-400">
+							<span className="text-sm text-base-content/60">
 								{selectedTeams.size} of {extractedTeams.length} selected
 							</span>
 						</div>
@@ -279,32 +275,28 @@ function ImportTeamsPage() {
 
 					{/* Duplicate Warning */}
 					{duplicateCheck && duplicateCheck.duplicates.length > 0 && (
-						<div className="bg-yellow-500/10 border border-yellow-500/50 rounded-lg p-4">
-							<div className="flex items-start gap-3">
-								<AlertCircle
-									className="text-yellow-500 flex-shrink-0 mt-0.5"
-									size={20}
-								/>
-								<div className="flex-1">
-									<h3 className="font-semibold text-yellow-400 mb-1">
-										Duplicate Teams Detected
-									</h3>
-									<p className="text-yellow-300 text-sm mb-2">
-										{duplicateCheck.duplicates.length} team(s) already exist in
-										your database.
-									</p>
-									<label className="flex items-center gap-2 cursor-pointer">
-										<input
-											type="checkbox"
-											checked={skipDuplicates}
-											onChange={(e) => setSkipDuplicates(e.target.checked)}
-											className="rounded"
-										/>
-										<span className="text-sm text-yellow-200">
-											Skip duplicate teams during import
-										</span>
-									</label>
+						<div className="alert alert-warning">
+							<AlertCircle
+								className="stroke-current shrink-0 h-6 w-6"
+								size={20}
+							/>
+							<div className="flex-1">
+								<h3 className="font-bold">Duplicate Teams Detected</h3>
+								<div className="text-xs mb-2">
+									{duplicateCheck.duplicates.length} team(s) already exist in
+									your database.
 								</div>
+								<label className="label cursor-pointer">
+									<span className="label-text text-sm">
+										Skip duplicate teams during import
+									</span>
+									<input
+										type="checkbox"
+										checked={skipDuplicates}
+										onChange={(e) => setSkipDuplicates(e.target.checked)}
+										className="checkbox checkbox-warning"
+									/>
+								</label>
 							</div>
 						</div>
 					)}
@@ -318,12 +310,12 @@ function ImportTeamsPage() {
 							return (
 								<div
 									key={index}
-									className={`bg-slate-700/50 rounded-lg border-2 overflow-hidden ${
+									className={`card bg-base-300 border-2 overflow-hidden ${
 										duplicate
-											? "border-yellow-500/50"
+											? "border-warning"
 											: selectedTeams.has(index)
-												? "border-cyan-500"
-												: "border-slate-600"
+												? "border-primary"
+												: "border-base-300"
 									}`}
 								>
 									{/* Team Header with Colors */}
@@ -335,32 +327,32 @@ function ImportTeamsPage() {
 									>
 										{team.abbreviation}
 										{duplicate && (
-											<div className="absolute top-2 right-2 bg-yellow-500 text-yellow-900 text-xs px-2 py-1 rounded font-semibold">
+											<div className="badge badge-warning absolute top-2 right-2">
 												Duplicate
 											</div>
 										)}
 									</div>
 
 									{/* Team Info */}
-									<div className="p-4 space-y-3">
+									<div className="card-body p-4 space-y-3">
 										{/* Selection Checkbox */}
-										<label className="flex items-center gap-2 cursor-pointer">
+										<label className="label cursor-pointer">
+											<span className="label-text text-sm font-medium">
+												Import this team
+											</span>
 											<input
 												type="checkbox"
 												checked={selectedTeams.has(index)}
 												onChange={() => toggleTeamSelection(index)}
-												className="rounded"
+												className="checkbox checkbox-primary"
 											/>
-											<span className="text-sm font-medium text-white">
-												Import this team
-											</span>
 										</label>
 
 										{/* Editable Fields */}
 										<div className="space-y-2">
 											<div>
-												<label className="block text-xs font-medium text-gray-400 mb-1">
-													Team Name
+												<label className="label">
+													<span className="label-text-alt">Team Name</span>
 												</label>
 												<input
 													type="text"
@@ -368,13 +360,13 @@ function ImportTeamsPage() {
 													onChange={(e) =>
 														updateTeam(index, { name: e.target.value })
 													}
-													className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+													className="input input-bordered input-sm w-full"
 												/>
 											</div>
 
 											<div>
-												<label className="block text-xs font-medium text-gray-400 mb-1">
-													Abbreviation
+												<label className="label">
+													<span className="label-text-alt">Abbreviation</span>
 												</label>
 												<input
 													type="text"
@@ -387,13 +379,13 @@ function ImportTeamsPage() {
 														})
 													}
 													maxLength={5}
-													className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded text-white text-sm uppercase focus:outline-none focus:ring-2 focus:ring-cyan-500"
+													className="input input-bordered input-sm w-full uppercase"
 												/>
 											</div>
 
 											<div>
-												<label className="block text-xs font-medium text-gray-400 mb-1">
-													Division
+												<label className="label">
+													<span className="label-text-alt">Division</span>
 												</label>
 												<select
 													value={team.division || ""}
@@ -404,7 +396,7 @@ function ImportTeamsPage() {
 																: undefined,
 														})
 													}
-													className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+													className="select select-bordered select-sm w-full"
 												>
 													<option value="">Not set</option>
 													<option value="open">Open</option>
@@ -415,8 +407,8 @@ function ImportTeamsPage() {
 
 											{/* Colors */}
 											<div>
-												<label className="block text-xs font-medium text-gray-400 mb-1">
-													Colors
+												<label className="label">
+													<span className="label-text-alt">Colors</span>
 												</label>
 												<div className="grid grid-cols-2 gap-2">
 													<div>
@@ -431,11 +423,11 @@ function ImportTeamsPage() {
 																	},
 																})
 															}
-															className="w-full h-10 rounded border border-slate-500 cursor-pointer"
+															className="w-full h-10 rounded border border-base-300 cursor-pointer"
 														/>
-														<p className="text-xs text-gray-500 mt-1">
-															Primary
-														</p>
+														<label className="label">
+															<span className="label-text-alt">Primary</span>
+														</label>
 													</div>
 													<div>
 														<input
@@ -449,21 +441,35 @@ function ImportTeamsPage() {
 																	},
 																})
 															}
-															className="w-full h-10 rounded border border-slate-500 cursor-pointer"
+															className="w-full h-10 rounded border border-base-300 cursor-pointer"
 														/>
-														<p className="text-xs text-gray-500 mt-1">
-															Secondary
-														</p>
+														<label className="label">
+															<span className="label-text-alt">Secondary</span>
+														</label>
 													</div>
 												</div>
 											</div>
 
 											{duplicateInfo && (
-												<div className="text-xs text-yellow-400 bg-yellow-500/10 p-2 rounded">
-													⚠️{" "}
-													{duplicateInfo.reason === "name"
-														? `Team with this name already exists`
-														: `Team with this abbreviation already exists`}
+												<div className="alert alert-warning py-2">
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														className="stroke-current shrink-0 h-4 w-4"
+														fill="none"
+														viewBox="0 0 24 24"
+													>
+														<path
+															strokeLinecap="round"
+															strokeLinejoin="round"
+															strokeWidth="2"
+															d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+														/>
+													</svg>
+													<span className="text-xs">
+														{duplicateInfo.reason === "name"
+															? `Team with this name already exists`
+															: `Team with this abbreviation already exists`}
+													</span>
 												</div>
 											)}
 										</div>
@@ -474,14 +480,14 @@ function ImportTeamsPage() {
 					</div>
 
 					{/* Action Buttons */}
-					<div className="flex gap-4 pt-6 border-t border-slate-700">
+					<div className="card-actions pt-6 border-t border-base-300">
 						<button
 							onClick={() => {
 								setExtractedTeams([]);
 								setSelectedTeams(new Set());
 								setUrl("");
 							}}
-							className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
+							className="btn btn-ghost flex-1"
 							disabled={isImporting}
 						>
 							Start Over
@@ -495,11 +501,11 @@ function ImportTeamsPage() {
 									duplicateCheck &&
 									duplicateCheck.duplicates.length > 0)
 							}
-							className="flex-1 px-6 py-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+							className="btn btn-primary flex-1"
 						>
 							{isImporting ? (
 								<>
-									<Loader2 className="animate-spin" size={20} />
+									<span className="loading loading-spinner loading-sm"></span>
 									Importing...
 								</>
 							) : (
@@ -515,61 +521,52 @@ function ImportTeamsPage() {
 
 			{/* Step 3: Import Results */}
 			{importResults && (
-				<div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700 p-8 space-y-6">
+				<div className="card bg-base-200 shadow-xl p-8 space-y-6">
 					<div className="flex items-center gap-2">
-						<div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold">
+						<div className="w-8 h-8 rounded-full bg-success text-success-content flex items-center justify-center font-bold">
 							3
 						</div>
-						<h2 className="text-xl font-bold text-white">Import Complete</h2>
+						<h2 className="text-xl font-bold text-base-content">
+							Import Complete
+						</h2>
 					</div>
 
 					{importResults.created.length > 0 && (
-						<div className="bg-green-500/10 border border-green-500/50 rounded-lg p-4">
-							<div className="flex items-start gap-3">
-								<CheckCircle2
-									className="text-green-500 flex-shrink-0 mt-0.5"
-									size={20}
-								/>
-								<div>
-									<h3 className="font-semibold text-green-400 mb-1">
-										Successfully Imported
-									</h3>
-									<p className="text-green-300 text-sm">
-										{importResults.created.length} team(s) imported successfully
-									</p>
+						<div className="alert alert-success">
+							<CheckCircle2
+								className="stroke-current shrink-0 h-6 w-6"
+								size={20}
+							/>
+							<div>
+								<h3 className="font-bold">Successfully Imported</h3>
+								<div className="text-xs">
+									{importResults.created.length} team(s) imported successfully
 								</div>
 							</div>
 						</div>
 					)}
 
 					{importResults.skipped.length > 0 && (
-						<div className="bg-yellow-500/10 border border-yellow-500/50 rounded-lg p-4">
-							<div className="flex items-start gap-3">
-								<AlertCircle
-									className="text-yellow-500 flex-shrink-0 mt-0.5"
-									size={20}
-								/>
-								<div className="flex-1">
-									<h3 className="font-semibold text-yellow-400 mb-1">
-										Skipped Teams
-									</h3>
-									<ul className="text-yellow-300 text-sm space-y-1">
-										{importResults.skipped.map((item, index) => (
-											<li key={index}>
-												• {item.team.name}: {item.reason}
-											</li>
-										))}
-									</ul>
-								</div>
+						<div className="alert alert-warning">
+							<AlertCircle
+								className="stroke-current shrink-0 h-6 w-6"
+								size={20}
+							/>
+							<div className="flex-1">
+								<h3 className="font-bold">Skipped Teams</h3>
+								<ul className="text-sm space-y-1 list-disc list-inside">
+									{importResults.skipped.map((item, index) => (
+										<li key={index}>
+											{item.team.name}: {item.reason}
+										</li>
+									))}
+								</ul>
 							</div>
 						</div>
 					)}
 
-					<div className="flex gap-4 pt-6 border-t border-slate-700">
-						<Link
-							to="/admin/teams"
-							className="flex-1 px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-lg transition-colors text-center"
-						>
+					<div className="card-actions pt-6 border-t border-base-300">
+						<Link to="/admin/teams" className="btn btn-primary flex-1">
 							View All Teams
 						</Link>
 						<button
@@ -579,7 +576,7 @@ function ImportTeamsPage() {
 								setUrl("");
 								setImportResults(null);
 							}}
-							className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
+							className="btn btn-ghost flex-1"
 						>
 							Import More Teams
 						</button>

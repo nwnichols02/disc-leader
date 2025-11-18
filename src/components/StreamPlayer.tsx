@@ -40,15 +40,33 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const whepClientRef = useRef<WHEPClient | null>(null);
 
+	// Helper function to extract account ID from Cloudflare URLs
+	const extractAccountId = (url: string | null | undefined): string | null => {
+		if (!url) return null;
+		const match = url.match(/customer-([^/]+)\.cloudflarestream\.com/);
+		return match ? match[1] : null;
+	};
+
+	// Get account ID from env var or extract from URLs
+	const getAccountId = (): string | null => {
+		const envAccountId = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
+		if (envAccountId) return envAccountId;
+		
+		// Try to extract from webRtcPlaybackUrl or streamUrl
+		return extractAccountId(webRtcPlaybackUrl) || extractAccountId(streamUrl);
+	};
+
 	// Validate configuration
 	useEffect(() => {
 		if (!streamId && !streamUrl && !webRtcPlaybackUrl) {
 			return;
 		}
 
-		const accountId = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
+		const accountId = getAccountId();
 		if (!accountId && !webRtcPlaybackUrl) {
 			setError("Cloudflare account not configured");
+		} else {
+			setError(null); // Clear error if we have account ID or webRtcPlaybackUrl
 		}
 	}, [streamId, streamUrl, webRtcPlaybackUrl]);
 
@@ -190,47 +208,58 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 	}
 
 	// Build iframe URL for Cloudflare Stream player
-	const accountId = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
+	const accountId = getAccountId();
 	let iframeSrc: string | undefined;
 
-	if (streamId && accountId && webRtcPlaybackUrl) {
-		// Build iframe URL with query parameters
-		const params = new URLSearchParams();
-		if (autoPlay && streamStatus === "live") {
-			params.set("autoplay", "true");
-		}
-		params.set("preload", "true");
-
-		// Get poster/thumbnail URL
-		const posterUrl = `https://customer-${accountId}.cloudflarestream.com/${streamId}/thumbnails/thumbnail.jpg?time=&height=600`;
-		params.set("poster", posterUrl);
-
-		console.log("webRtcPlaybackUrl", webRtcPlaybackUrl);
-
+	// Try to build iframe URL from webRtcPlaybackUrl first
+	if (webRtcPlaybackUrl) {
 		const match = webRtcPlaybackUrl.match(
 			/customer-([^/]+)\.cloudflarestream\.com\/([^/]+)\//,
 		);
-		if (match && match[2]) {
-			const extractedStreamId = match[2];
-			iframeSrc = `https://customer-${accountId}.cloudflarestream.com/${extractedStreamId}/iframe?${params.toString()}`;
-		}
-
-	} else if (streamUrl) {
-		// If we have a streamUrl (HLS manifest), try to extract stream ID
-		// Format: https://customer-<CODE>.cloudflarestream.com/<STREAM_ID>/manifest/video.m3u8
-		console.log("streamUrl", streamUrl);
-		const match = streamUrl.match(
-			/customer-([^/]+)\.cloudflarestream\.com\/([^/]+)\//,
-		);
-		if (match && match[2]) {
+		if (match && match[1] && match[2]) {
+			const extractedAccountId = match[1];
 			const extractedStreamId = match[2];
 			const params = new URLSearchParams();
 			if (autoPlay && streamStatus === "live") {
 				params.set("autoplay", "true");
 			}
 			params.set("preload", "true");
-			iframeSrc = `https://customer-${match[1]}.cloudflarestream.com/${extractedStreamId}/iframe?${params.toString()}`;
+			
+			// Get poster/thumbnail URL if we have streamId
+			if (streamId || extractedStreamId) {
+				const posterStreamId = streamId || extractedStreamId;
+				const posterUrl = `https://customer-${extractedAccountId}.cloudflarestream.com/${posterStreamId}/thumbnails/thumbnail.jpg?time=&height=600`;
+				params.set("poster", posterUrl);
+			}
+			
+			iframeSrc = `https://customer-${extractedAccountId}.cloudflarestream.com/${extractedStreamId}/iframe?${params.toString()}`;
 		}
+	} else if (streamUrl) {
+		// If we have a streamUrl (HLS manifest), try to extract stream ID and account ID
+		// Format: https://customer-<CODE>.cloudflarestream.com/<STREAM_ID>/manifest/video.m3u8
+		const match = streamUrl.match(
+			/customer-([^/]+)\.cloudflarestream\.com\/([^/]+)\//,
+		);
+		if (match && match[1] && match[2]) {
+			const extractedAccountId = match[1];
+			const extractedStreamId = match[2];
+			const params = new URLSearchParams();
+			if (autoPlay && streamStatus === "live") {
+				params.set("autoplay", "true");
+			}
+			params.set("preload", "true");
+			iframeSrc = `https://customer-${extractedAccountId}.cloudflarestream.com/${extractedStreamId}/iframe?${params.toString()}`;
+		}
+	} else if (streamId && accountId) {
+		// Fallback: use streamId and accountId if available
+		const params = new URLSearchParams();
+		if (autoPlay && streamStatus === "live") {
+			params.set("autoplay", "true");
+		}
+		params.set("preload", "true");
+		const posterUrl = `https://customer-${accountId}.cloudflarestream.com/${streamId}/thumbnails/thumbnail.jpg?time=&height=600`;
+		params.set("poster", posterUrl);
+		iframeSrc = `https://customer-${accountId}.cloudflarestream.com/${streamId}/iframe?${params.toString()}`;
 	}
 
 	// Player container - use iframe embed
@@ -257,8 +286,8 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 						</svg>
 						<p className="text-sm">Stream configuration incomplete</p>
 						<p className="text-xs text-gray-400 mt-1">
-							{!accountId && "Cloudflare account not configured"}
-							{accountId && "Unable to build stream URL"}
+							{!accountId && !webRtcPlaybackUrl && !streamUrl && "Cloudflare account not configured"}
+							{(accountId || webRtcPlaybackUrl || streamUrl) && "Unable to build stream URL"}
 						</p>
 					</div>
 				</div>

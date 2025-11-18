@@ -23,6 +23,7 @@ export interface BrowserStreamProps {
 	onStreamStop?: () => void;
 	onError?: (error: string) => void;
 	onCanvasStreamReady?: (stream: MediaStream | null) => void;
+	onStreamingStateChange?: (isStreaming: boolean) => void;
 	useCanvas?: boolean;
 }
 
@@ -32,6 +33,7 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 	onStreamStop,
 	onError,
 	onCanvasStreamReady,
+	onStreamingStateChange,
 	useCanvas = false,
 }) => {
 	const [isStreaming, setIsStreaming] = useState(false);
@@ -167,6 +169,7 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 
 	// Request camera and microphone access
 	const requestMediaAccess = async (): Promise<MediaStream | null> => {
+		setIsRequestingAccess(true);
 		try {
 			const stream = await navigator.mediaDevices.getUserMedia({
 				video: videoEnabled
@@ -179,14 +182,19 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 				audio: audioEnabled,
 			});
 
+			// Store the stream reference
+			mediaStreamRef.current = stream;
+
 			// Show preview
 			if (videoRef.current) {
 				videoRef.current.srcObject = stream;
 			}
 
 			setHasAccess(true);
+			setIsRequestingAccess(false);
 			return stream;
 		} catch (err) {
+			setIsRequestingAccess(false);
 			const errorMessage =
 				err instanceof Error
 					? err.message
@@ -216,8 +224,11 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 		}
 	};
 
-	// Request camera/mic access for preview
-	const requestAccess = async () => {
+
+	// Setup camera - requests camera access
+	const setupCamera = async () => {
+		if (isRequestingAccess || hasAccess) return;
+
 		setIsRequestingAccess(true);
 		setError(null);
 
@@ -227,13 +238,40 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 			return;
 		}
 
-		mediaStreamRef.current = stream;
+		// Wait for video to load and canvas to be ready (if using canvas)
+		if (useCanvas) {
+			// Wait for video to load metadata
+			if (videoRef.current) {
+				await new Promise<void>((resolve) => {
+					if (videoRef.current) {
+						if (videoRef.current.readyState >= videoRef.current.HAVE_METADATA) {
+							resolve();
+						} else {
+							const onLoadedMetadata = () => {
+								if (videoRef.current) {
+									videoRef.current.removeEventListener('loadedmetadata', onLoadedMetadata);
+								}
+								resolve();
+							};
+							videoRef.current.addEventListener('loadedmetadata', onLoadedMetadata);
+							// Timeout after 2 seconds
+							setTimeout(resolve, 2000);
+						}
+					} else {
+						resolve();
+					}
+				});
+			}
+			// Additional wait for canvas stream to be created
+			await new Promise(resolve => setTimeout(resolve, 300));
+		}
+
 		setIsRequestingAccess(false);
 	};
 
-	// Start streaming
+	// Start streaming - requires camera to be set up first
 	const startStream = async () => {
-		if (isStreaming) return;
+		if (isStreaming || isLoading) return;
 
 		if (!webRtcPublishUrl) {
 			setError("WebRTC publish URL not configured");
@@ -241,51 +279,74 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 			return;
 		}
 
-		// Ensure we have media access
-		if (!mediaStreamRef.current || !hasAccess) {
-			setError("Please enable camera access first");
-			return;
-		}
-
 		setIsLoading(true);
 		setError(null);
 
 		try {
-			// Use canvas stream if enabled, otherwise use media stream directly
-			let streamToPublish: MediaStream;
-			
-			if (useCanvas) {
-				// Wait for canvas stream to be ready
-				if (!canvasStreamRef.current) {
-					setError("Canvas stream not ready. Please wait a moment and try again.");
+			// Ensure camera is set up - re-request if needed
+			if (!mediaStreamRef.current || !hasAccess) {
+				// Re-request camera access if it was lost
+				const stream = await requestMediaAccess();
+				if (!stream) {
+					setError("Please set up camera first");
 					setIsLoading(false);
 					return;
 				}
-				streamToPublish = canvasStreamRef.current;
-				
-				// Verify canvas stream has video tracks
-				const videoTracks = streamToPublish.getVideoTracks();
-				if (videoTracks.length === 0) {
-					setError("Canvas stream has no video tracks");
-					setIsLoading(false);
-					return;
-				}
-				
-				// Check if canvas is actually rendering (has dimensions)
-				if (canvasRef.current) {
-					const canvas = canvasRef.current;
-					if (canvas.width === 0 || canvas.height === 0) {
-						setError("Canvas has no dimensions. Video may not be loaded yet.");
+			}
+
+			// Verify media stream is still active
+			if (mediaStreamRef.current) {
+				const activeTracks = mediaStreamRef.current.getTracks().filter(track => track.readyState === 'live');
+				if (activeTracks.length === 0) {
+					// Stream was stopped, re-request access
+					const stream = await requestMediaAccess();
+					if (!stream) {
+						setError("Camera access lost. Please set up camera again.");
 						setIsLoading(false);
 						return;
 					}
 				}
-			} else {
-				streamToPublish = mediaStreamRef.current;
 			}
 
+			// Use Promise.all to prepare stream and verify states in parallel
+			const streamToPublish = await (async () => {
+				if (useCanvas) {
+					// Wait for canvas stream to be ready with timeout
+					let attempts = 0;
+					const maxAttempts = 20; // 2 seconds total
+					while (!canvasStreamRef.current && attempts < maxAttempts) {
+						await new Promise(resolve => setTimeout(resolve, 100));
+						attempts++;
+					}
+					
+					if (!canvasStreamRef.current) {
+						throw new Error("Canvas stream not ready. Please wait a moment and try again.");
+					}
+					
+					// Verify canvas stream has video tracks
+					const videoTracks = canvasStreamRef.current.getVideoTracks();
+					if (videoTracks.length === 0) {
+						throw new Error("Canvas stream has no video tracks");
+					}
+					
+					// Check if canvas is actually rendering (has dimensions)
+					if (canvasRef.current) {
+						const canvas = canvasRef.current;
+						if (canvas.width === 0 || canvas.height === 0) {
+							throw new Error("Canvas has no dimensions. Video may not be loaded yet.");
+						}
+					}
+					
+					return canvasStreamRef.current;
+				} else {
+					if (!mediaStreamRef.current) {
+						throw new Error("Media stream not available");
+					}
+					return mediaStreamRef.current;
+				}
+			})();
+
 			// Create WHIP client - don't pass video element when using canvas
-			// to avoid interfering with canvas rendering
 			const whipClient = new WHIPClient(
 				webRtcPublishUrl,
 				useCanvas ? undefined : videoRef.current || undefined,
@@ -295,8 +356,14 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 			// Start publishing stream via WHIP
 			await whipClient.publish(streamToPublish);
 
+			// Update state and notify parent - do this AFTER successful publish
 			setIsStreaming(true);
 			setIsLoading(false);
+			
+			// Notify parent of streaming state change FIRST
+			onStreamingStateChange?.(true);
+			
+			// Then call onStreamStart to update database
 			onStreamStart?.();
 		} catch (err) {
 			console.error("Error starting stream:", err);
@@ -305,7 +372,7 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 			setError(errorMessage);
 			onError?.(errorMessage);
 			setIsLoading(false);
-			stopStream();
+			// Don't call stopStream here as it might interfere with the error state
 		}
 	};
 
@@ -315,14 +382,16 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 			return;
 		}
 
+		// Use Promise.all to stop all resources in parallel
+		const stopOperations: Promise<unknown>[] = [];
+
 		// Stop WHIP client
 		if (whipClientRef.current) {
-			try {
-				await whipClientRef.current.stop();
-			} catch (err) {
-				console.error("Error stopping WHIP client:", err);
-			}
-			whipClientRef.current = null;
+			stopOperations.push(
+				whipClientRef.current.stop().catch((err) => {
+					console.error("Error stopping WHIP client:", err);
+				})
+			);
 		}
 
 		// Stop canvas stream tracks
@@ -334,20 +403,38 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 			onCanvasStreamReadyRef.current?.(null);
 		}
 
-		// Stop all tracks
+		// Stop all media tracks (but don't clear the stream ref yet - we'll do that after)
 		if (mediaStreamRef.current) {
 			mediaStreamRef.current.getTracks().forEach((track) => {
 				track.stop();
 			});
-			mediaStreamRef.current = null;
 		}
 
-		// Clear video preview only if stopping stream (not just revoking access)
-		if (videoRef.current && isStreaming) {
+		// Wait for all stop operations to complete
+		await Promise.all(stopOperations);
+
+		// Clean up references after stopping
+		whipClientRef.current = null;
+		
+		// Clear media stream reference and update access state
+		// This ensures permissions are properly reset for next time
+		if (mediaStreamRef.current) {
+			mediaStreamRef.current = null;
+			setHasAccess(false); // Reset access state so camera will be re-requested
+		}
+
+		// Clear video preview
+		if (videoRef.current) {
 			videoRef.current.srcObject = null;
 		}
 
+		// Update state and notify parent
 		setIsStreaming(false);
+		
+		// Notify parent of streaming state change FIRST
+		onStreamingStateChange?.(false);
+		
+		// Then call onStreamStop to update database
 		onStreamStop?.();
 	};
 
@@ -395,19 +482,19 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 	};
 
 	return (
-		<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-			<div className="space-y-4">
-				{/* Header */}
+		<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+			<div className="space-y-3">
+				{/* Header - Compact */}
 				<div className="flex items-center justify-between">
-					<h3 className="text-lg font-semibold text-gray-900">
-						Browser Stream
+					<h3 className="text-sm font-semibold text-gray-900">
+						Live Stream
 					</h3>
 					{error && (
 						<button
 							onClick={() => setError(null)}
 							className="text-gray-400 hover:text-gray-600"
 						>
-							<X className="w-4 h-4" />
+							<X className="w-3 h-3" />
 						</button>
 					)}
 				</div>
@@ -419,8 +506,8 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 					</div>
 				)}
 
-				{/* Video Preview */}
-				<div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+				{/* Video Preview - Compact */}
+				<div className="relative bg-black rounded-lg overflow-hidden" style={{ aspectRatio: '16/9', maxHeight: '200px' }}>
 					<video
 						ref={videoRef}
 						autoPlay
@@ -440,127 +527,124 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 							<VideoOff className="w-16 h-16 text-gray-400" />
 						</div>
 					)}
-					{!hasAccess && (
+					{!hasAccess && !isRequestingAccess && (
+						<div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+							<div className="text-center text-white px-4">
+								<Video className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+								<p className="text-xs mb-2">Click "Setup Camera" to enable camera</p>
+							</div>
+						</div>
+					)}
+					{isRequestingAccess && (
 						<div className="absolute inset-0 flex items-center justify-center bg-gray-900">
 							<div className="text-center text-white">
-								<Video className="w-16 h-16 mx-auto mb-2 text-gray-400" />
-								<p className="text-sm mb-4">Camera preview will appear here</p>
-								<button
-									onClick={requestAccess}
-									disabled={isRequestingAccess}
-									className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
-								>
-									{isRequestingAccess ? (
-										<>
-											<Loader2 className="w-4 h-4 animate-spin" />
-											Requesting access...
-										</>
-									) : (
-										<>
-											<Video className="w-4 h-4" />
-											Enable Camera & Microphone
-										</>
-									)}
-								</button>
+								<Loader2 className="w-8 h-8 mx-auto mb-2 text-gray-400 animate-spin" />
+								<p className="text-xs">Requesting camera access...</p>
 							</div>
 						</div>
 					)}
 				</div>
 
-				{/* Controls */}
-				<div className="flex items-center gap-2">
-					{/* Video Toggle */}
+				{/* Controls - Compact */}
+				<div className="flex items-center gap-2 flex-wrap">
+					{/* Video Toggle - Compact */}
 					<button
 						onClick={toggleVideo}
 						disabled={!isStreaming}
-						className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+						className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors text-xs ${
 							videoEnabled
 								? "bg-blue-100 text-blue-700 hover:bg-blue-200"
 								: "bg-gray-100 text-gray-600 hover:bg-gray-200"
 						} disabled:opacity-50 disabled:cursor-not-allowed`}
+						title={videoEnabled ? "Disable video" : "Enable video"}
 					>
 						{videoEnabled ? (
-							<Video className="w-4 h-4" />
+							<Video className="w-3 h-3" />
 						) : (
-							<VideoOff className="w-4 h-4" />
+							<VideoOff className="w-3 h-3" />
 						)}
-						<span className="text-sm font-medium">Video</span>
 					</button>
 
-					{/* Audio Toggle */}
+					{/* Audio Toggle - Compact */}
 					<button
 						onClick={toggleAudio}
 						disabled={!isStreaming}
-						className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+						className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors text-xs ${
 							audioEnabled
 								? "bg-blue-100 text-blue-700 hover:bg-blue-200"
 								: "bg-gray-100 text-gray-600 hover:bg-gray-200"
 						} disabled:opacity-50 disabled:cursor-not-allowed`}
+						title={audioEnabled ? "Disable audio" : "Enable audio"}
 					>
 						{audioEnabled ? (
-							<Mic className="w-4 h-4" />
+							<Mic className="w-3 h-3" />
 						) : (
-							<MicOff className="w-4 h-4" />
+							<MicOff className="w-3 h-3" />
 						)}
-						<span className="text-sm font-medium">Audio</span>
 					</button>
 
-					{/* Access Control */}
-					{hasAccess && !isStreaming && (
-						<button
-							onClick={revokeAccess}
-							className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-						>
-							Revoke Access
-						</button>
-					)}
-
-					{/* Start/Stop Button */}
-					<div className="flex-1 flex justify-end">
-						{!isStreaming ? (
+					{/* Setup Camera / Start Stream Buttons */}
+					<div className="flex-1 flex justify-end gap-2">
+						{!hasAccess ? (
 							<button
-								onClick={startStream}
-								disabled={isLoading || !hasAccess}
-								className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+								onClick={setupCamera}
+								disabled={isRequestingAccess}
+								className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
 							>
-								{isLoading ? (
-									<Loader2 className="w-4 h-4 animate-spin" />
+								{isRequestingAccess ? (
+									<Loader2 className="w-3 h-3 animate-spin" />
 								) : (
-									<Video className="w-4 h-4" />
+									<Video className="w-3 h-3" />
 								)}
-								<span className="font-medium">
-									{isLoading
-										? "Starting..."
-										: !hasAccess
-											? "Enable Camera First"
-											: "Start Streaming"}
+								<span className="font-medium text-xs">
+									{isRequestingAccess ? "Setting up..." : "Setup Camera"}
 								</span>
 							</button>
+						) : !isStreaming ? (
+							<>
+								<button
+									onClick={revokeAccess}
+									className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+									title="Revoke camera access"
+								>
+									Revoke
+								</button>
+								<button
+									onClick={startStream}
+									disabled={isLoading}
+									className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 relative"
+								>
+									{isLoading ? (
+										<Loader2 className="w-3 h-3 animate-spin" />
+									) : (
+										<Video className="w-3 h-3" />
+									)}
+									<span className="font-medium text-xs">
+										{isLoading ? "Starting..." : "Start Stream"}
+									</span>
+								</button>
+							</>
 						) : (
 							<button
 								onClick={stopStream}
-								className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+								className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors flex items-center gap-1.5"
 							>
-								<VideoOff className="w-4 h-4" />
-								<span className="font-medium">Stop Streaming</span>
+								<VideoOff className="w-3 h-3" />
+								<span className="font-medium text-xs">Stop</span>
 							</button>
 						)}
 					</div>
 				</div>
 
-				{/* Info */}
+				{/* Info - Compact */}
 				{isStreaming && (
-					<div className="bg-green-50 border border-green-200 rounded-lg p-3">
+					<div className="bg-green-50 border border-green-200 rounded-lg p-2">
 						<div className="flex items-center gap-2">
 							<div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
-							<p className="text-sm text-green-800 font-medium">
-								Streaming active
+							<p className="text-xs text-green-800 font-medium">
+								Streaming to Cloudflare
 							</p>
 						</div>
-						<p className="text-xs text-green-600 mt-1">
-							Video and audio are being streamed directly to Cloudflare Stream
-							via WebRTC.
-						</p>
 					</div>
 				)}
 			</div>

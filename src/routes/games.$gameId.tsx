@@ -10,7 +10,8 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react"; // Changed to Convex's useQuery
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Video, VideoOff } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { LiveScoreboard } from "../components/LiveScoreboard";
@@ -56,6 +57,7 @@ export const Route = createFileRoute("/games/$gameId")({
 function GamePage() {
 	const { gameId } = Route.useParams();
 	const { game: initialGame } = Route.useLoaderData();
+	const [showVideo, setShowVideo] = useState(true);
 
 	// Real-time subscription to game data
 	// Convex handles SSR hydration automatically
@@ -128,29 +130,53 @@ function GamePage() {
 		<div className="min-h-screen bg-gray-50">
 			{/* Header */}
 			<header className="bg-white border-b border-gray-200 px-4 py-3">
-				<div className="max-w-4xl mx-auto">
-					<h1 className="text-xl font-bold text-gray-900">
-						{displayGame.homeTeam?.name} vs {displayGame.awayTeam?.name}
-					</h1>
-					<p className="text-sm text-gray-600 mt-1">
-						{displayGame.venue || "Venue TBA"}
-					</p>
+				<div className="max-w-4xl mx-auto flex items-center justify-between">
+					<div>
+						<h1 className="text-xl font-bold text-gray-900">
+							{displayGame.homeTeam?.name} vs {displayGame.awayTeam?.name}
+						</h1>
+						<p className="text-sm text-gray-600 mt-1">
+							{displayGame.venue || "Venue TBA"}
+						</p>
+					</div>
+					{/* Video Toggle Button */}
+					{(displayGame.streamId || displayGame.webRtcPlaybackUrl) && (
+						<button
+							onClick={() => setShowVideo(!showVideo)}
+							className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+							title={showVideo ? "Hide video" : "Show video"}
+						>
+							{showVideo ? (
+								<>
+									<VideoOff className="w-4 h-4" />
+									<span className="hidden sm:inline">Hide Video</span>
+								</>
+							) : (
+								<>
+									<Video className="w-4 h-4" />
+									<span className="hidden sm:inline">Show Video</span>
+								</>
+							)}
+						</button>
+					)}
 				</div>
 			</header>
 
 			{/* Main Content */}
 			<main className="max-w-4xl mx-auto px-4 py-6">
-				{/* Stream Player - Always shown above scoreboard */}
-				<div className="mb-6">
-					<StreamPlayer
-						streamId={displayGame.streamId}
-						streamUrl={displayGame.streamUrl}
-						webRtcPlaybackUrl={displayGame.webRtcPlaybackUrl}
-						streamStatus={displayGame.streamStatus}
-						autoPlay={displayGame.streamStatus === "live"}
-						className="w-full"
-					/>
-				</div>
+				{/* Stream Player - Toggleable */}
+				{showVideo && (displayGame.streamId || displayGame.webRtcPlaybackUrl) && (
+					<div className="mb-6">
+						<StreamPlayer
+							streamId={displayGame.streamId}
+							streamUrl={displayGame.streamUrl}
+							webRtcPlaybackUrl={displayGame.webRtcPlaybackUrl}
+							streamStatus={displayGame.streamStatus}
+							autoPlay={displayGame.streamStatus === "live"}
+							className="w-full"
+						/>
+					</div>
+				)}
 
 				{/* Live Scoreboard */}
 				<LiveScoreboard

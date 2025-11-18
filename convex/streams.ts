@@ -323,6 +323,72 @@ export const updateGameStream = mutation({
 });
 
 /**
+ * Create a game with automatic live input creation
+ * This action creates both the game and its associated live input stream
+ */
+export const createGameWithStream = action({
+	args: {
+		format: v.union(
+			v.literal("professional"),
+			v.literal("tournament"),
+			v.literal("recreational")
+		),
+		homeTeamId: v.id("teams"),
+		awayTeamId: v.id("teams"),
+		scheduledStart: v.number(),
+		venue: v.string(),
+		ruleConfig: v.object({
+			stallCount: v.union(v.literal(6), v.literal(7), v.literal(10)),
+			targetScore: v.optional(v.number()),
+			quarterLength: v.optional(v.number()),
+			halfLength: v.optional(v.number()),
+			timeoutsPerHalf: v.number(),
+			timeoutDuration: v.number(),
+			capRules: v.optional(v.object({
+				softCapTime: v.number(),
+				hardCapTime: v.number(),
+			})),
+		}),
+		genderRatioRequired: v.optional(v.boolean()),
+		fieldInfo: v.optional(v.object({
+			length: v.number(),
+			width: v.number(),
+			endZoneDepth: v.number(),
+			surface: v.string(),
+		})),
+	},
+	handler: async (ctx, args): Promise<Id<"games">> => {
+		// First, create the game using the existing mutation
+		const gameId: Id<"games"> = await ctx.runMutation(api.gameMutations.createGame, {
+			format: args.format,
+			homeTeamId: args.homeTeamId,
+			awayTeamId: args.awayTeamId,
+			scheduledStart: args.scheduledStart,
+			venue: args.venue,
+			ruleConfig: args.ruleConfig,
+			genderRatioRequired: args.genderRatioRequired,
+			fieldInfo: args.fieldInfo,
+		});
+
+		// Then, create the live input for this game
+		const liveInput = await ctx.runAction(api.streams.createLiveInput, {});
+
+		// Update the game with stream details
+		await ctx.runMutation(api.streams.updateGameStream, {
+			gameId,
+			streamKey: liveInput.streamKey,
+			streamId: liveInput.uid,
+			streamUrl: liveInput.rtmpUrl,
+			webRtcPublishUrl: liveInput.webRtcPublishUrl,
+			webRtcPlaybackUrl: liveInput.webRtcPlaybackUrl,
+			streamStatus: "upcoming",
+		});
+
+		return gameId;
+	},
+});
+
+/**
  * Get stream information for a game
  * If webRtcPublishUrl is missing but streamId exists, construct it from the streamId
  */

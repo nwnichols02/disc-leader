@@ -7,12 +7,11 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { LiveScoreboard } from "../components/LiveScoreboard";
 import { BrowserStream } from "../components/BrowserStream";
-import { Video, VideoOff, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/scorekeeper/$gameId")({
 	component: ScorekeeperPage,
@@ -90,8 +89,7 @@ function ScorekeeperPage() {
 	const updateStreamMutation = useMutation(api.streams.updateGameStream);
 	const createLiveInputAction = useAction(api.streams.createLiveInput);
 	const [isStreamLoading, setIsStreamLoading] = useState(false);
-	const [canvasStream, setCanvasStream] = useState<MediaStream | null>(null);
-	const canvasVideoRef = useRef<HTMLVideoElement>(null);
+	const [isActuallyStreaming, setIsActuallyStreaming] = useState(false);
 
 	// Initialize rules editor state when game loads
 	useEffect(() => {
@@ -162,19 +160,11 @@ function ScorekeeperPage() {
 	};
 
 	// Memoize the canvas stream ready callback to prevent infinite loops
-	const handleCanvasStreamReady = useCallback((stream: MediaStream | null) => {
-		setCanvasStream(stream);
+	// BrowserStream handles its own preview, so we don't need to track the stream
+	const handleCanvasStreamReady = useCallback((_stream: MediaStream | null) => {
+		// Callback is required by BrowserStream but we don't need to do anything with it
+		// The BrowserStream component handles its own preview display
 	}, []);
-
-	// Update canvas video element when stream changes
-	// This must be before any early returns to follow Rules of Hooks
-	useEffect(() => {
-		if (canvasVideoRef.current && canvasStream) {
-			canvasVideoRef.current.srcObject = canvasStream;
-		} else if (canvasVideoRef.current) {
-			canvasVideoRef.current.srcObject = null;
-		}
-	}, [canvasStream]);
 
 	if (isGamePending || !game) {
 		return (
@@ -250,47 +240,65 @@ function ScorekeeperPage() {
 		}
 	};
 
-	// Handle start stream
+	// Handle start stream - called when BrowserStream starts streaming
 	const handleStartStream = async () => {
-		// Check if another game already has a live stream
-		if (activeStreamGameId && activeStreamGameId !== gameId) {
-			alert(
-				"Another game is already streaming. Only one stream can be active at a time.",
-			);
-			return;
-		}
-
-		// Check if this game already has a live stream
-		if (streamInfo?.streamStatus === "live") {
-			alert("Stream is already running for this game.");
-			return;
-		}
-
 		setIsStreamLoading(true);
+		
 		try {
-			// If no stream key exists, create a live input first
-			if (!game.streamKey) {
-				const liveInput = await createLiveInputAction({});
-				await updateStreamMutation({
-					gameId: gameId as Id<"games">,
-					streamKey: liveInput.streamKey,
-					streamId: liveInput.uid, // Use the live input UID as streamId
-					streamUrl: liveInput.rtmpUrl, // Store RTMP URL
-					webRtcPublishUrl: liveInput.webRtcPublishUrl, // Store WebRTC publish URL
-					webRtcPlaybackUrl: liveInput.webRtcPlaybackUrl, // Store WebRTC playback URL
-					streamStatus: "upcoming",
-					streamStartTime: Date.now(),
-				});
+			// Validate states first (these are synchronous checks)
+			if (activeStreamGameId && activeStreamGameId !== gameId) {
+				alert(
+					"Another game is already streaming. Only one stream can be active at a time.",
+				);
+				return;
 			}
 
-			// Start the stream
-			await updateStreamMutation({
-				gameId: gameId as Id<"games">,
-				streamStatus: "live",
-				streamStartTime: Date.now(),
-			});
+			if (streamInfo?.streamStatus === "live") {
+				// Already live, no need to update
+				return;
+			}
+
+			if (!game) {
+				throw new Error("Game data not available");
+			}
+
+			// Prepare all operations that can run in parallel
+			const operations: Promise<unknown>[] = [];
+
+			// If no stream key exists, create a live input first
+			if (!game.streamKey || !streamInfo?.webRtcPublishUrl) {
+				// Create live input and update stream in sequence (update depends on live input)
+				const liveInput = await createLiveInputAction({});
+				
+				// Update stream with all data at once
+				operations.push(
+					updateStreamMutation({
+						gameId: gameId as Id<"games">,
+						streamKey: liveInput.streamKey,
+						streamId: liveInput.uid,
+						streamUrl: liveInput.rtmpUrl,
+						webRtcPublishUrl: liveInput.webRtcPublishUrl,
+						webRtcPlaybackUrl: liveInput.webRtcPlaybackUrl,
+						streamStatus: "upcoming",
+						streamStartTime: Date.now(),
+					})
+				);
+			}
+
+			// Update stream status to live (can run in parallel with other updates)
+			operations.push(
+				updateStreamMutation({
+					gameId: gameId as Id<"games">,
+					streamStatus: "live",
+					streamStartTime: Date.now(),
+				})
+			);
+
+			// Execute all operations in parallel
+			await Promise.all(operations);
 		} catch (err: any) {
-			alert(`Failed to start stream: ${err.message}`);
+			console.error("Failed to start stream:", err);
+			alert(`Failed to start stream: ${err.message || "Unknown error"}`);
 		} finally {
 			setIsStreamLoading(false);
 		}
@@ -322,12 +330,15 @@ function ScorekeeperPage() {
 		}
 	};
 
-	// Check if stream can be started/stopped
+	// Check if stream can be started
 	const canStartStream =
 		!isStreamLoading &&
 		streamInfo?.streamStatus !== "live" &&
 		(!activeStreamGameId || activeStreamGameId === gameId);
-	const canStopStream = !isStreamLoading && streamInfo?.streamStatus === "live";
+	
+	// Check if we should show the BrowserStream component
+	const shouldShowBrowserStream = !!streamInfo?.webRtcPublishUrl && 
+		(streamInfo?.streamStatus === "live" || canStartStream);
 
 	const isUpcoming = game?.status === "upcoming";
 	const isLive = game?.status === "live";
@@ -344,39 +355,11 @@ function ScorekeeperPage() {
 						</p>
 					</div>
 					<div className="flex gap-2">
-						{/* Stream Controls */}
-						{canStartStream && (
-							<button
-								onClick={handleStartStream}
-								disabled={isStreamLoading}
-								className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-							>
-								{isStreamLoading ? (
-									<Loader2 className="h-4 w-4 animate-spin" />
-								) : (
-									<Video className="h-4 w-4" />
-								)}
-								Start Stream
-							</button>
-						)}
-						{canStopStream && (
-							<button
-								onClick={handleStopStream}
-								disabled={isStreamLoading}
-								className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-							>
-								{isStreamLoading ? (
-									<Loader2 className="h-4 w-4 animate-spin" />
-								) : (
-									<VideoOff className="h-4 w-4" />
-								)}
-								Stop Stream
-							</button>
-						)}
-						{streamInfo?.streamStatus === "live" && (
+						{/* Stream Status Indicator - Only show when actually streaming */}
+						{streamInfo?.streamStatus === "live" && isActuallyStreaming && (
 							<div className="px-3 py-2 bg-red-100 text-red-800 text-sm font-medium rounded-lg flex items-center gap-1">
 								<div className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
-								Live
+								Live Streaming
 							</div>
 						)}
 						{isUpcoming && (
@@ -455,52 +438,36 @@ function ScorekeeperPage() {
 				/>
 			</div>
 
-			{/* Canvas Video Display - Show canvas stream on scorekeeper page */}
-			{canvasStream && (
-				<div className="max-w-4xl mx-auto px-4 pb-4">
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-						<h3 className="text-lg font-semibold text-gray-900 mb-3">
-							Live Stream Preview
-						</h3>
-						<div className="relative bg-black rounded-lg overflow-hidden aspect-video">
-							<video
-								ref={canvasVideoRef}
-								autoPlay
-								playsInline
-								muted
-								className="w-full h-full object-cover"
-							/>
-						</div>
-					</div>
+			{/* Browser Stream - Compact view when stream is available */}
+			{shouldShowBrowserStream && streamInfo.webRtcPublishUrl && (
+				<div className="max-w-2xl mx-auto px-4 pb-4">
+					<BrowserStream
+						webRtcPublishUrl={streamInfo.webRtcPublishUrl}
+						useCanvas={true}
+						onCanvasStreamReady={handleCanvasStreamReady}
+						onStreamingStateChange={(streaming) => {
+							// Update local state to track actual streaming status
+							setIsActuallyStreaming(streaming);
+						}}
+						onStreamStart={() => {
+							// Stream started from browser - update status
+							if (streamInfo?.streamStatus !== "live") {
+								handleStartStream();
+							}
+						}}
+						onStreamStop={() => {
+							// Stream stopped from browser - update status
+							if (streamInfo?.streamStatus === "live") {
+								handleStopStream();
+							}
+						}}
+						onError={(error) => {
+							console.error("Browser stream error:", error);
+							alert(`Stream error: ${error}`);
+						}}
+					/>
 				</div>
 			)}
-
-			{/* Browser Stream - Show when stream is active or can be started */}
-			{(streamInfo?.streamStatus === "live" || canStartStream) &&
-				streamInfo?.webRtcPublishUrl && (
-					<div className="max-w-4xl mx-auto px-4 pb-4">
-						<BrowserStream
-							webRtcPublishUrl={streamInfo.webRtcPublishUrl}
-							useCanvas={true}
-							onCanvasStreamReady={handleCanvasStreamReady}
-							onStreamStart={() => {
-								// Stream started from browser
-								if (streamInfo?.streamStatus !== "live") {
-									handleStartStream();
-								}
-							}}
-							onStreamStop={() => {
-								// Stream stopped from browser
-								if (streamInfo?.streamStatus === "live") {
-									handleStopStream();
-								}
-							}}
-							onError={(error) => {
-								console.error("Browser stream error:", error);
-							}}
-						/>
-					</div>
-				)}
 
 			{/* Rules Editor for Upcoming Games */}
 			{isUpcoming && showRulesEditor && (

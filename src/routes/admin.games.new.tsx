@@ -4,7 +4,7 @@
  */
 
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useQuery } from "convex/react";
 import { AlertCircle, Calendar, MapPin, Settings, Users } from "lucide-react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
@@ -31,7 +31,7 @@ type GameFormat = "professional" | "tournament" | "recreational";
 function NewGamePage() {
 	const navigate = useNavigate();
 	const teams = useQuery(api.games.listTeams);
-	const createGame = useMutation(api.gameMutations.createGame);
+	const createGameWithStream = useAction(api.streams.createGameWithStream);
 
 	// Form state
 	const [format, setFormat] = useState<GameFormat>("tournament");
@@ -135,8 +135,8 @@ function NewGamePage() {
 					}
 				: undefined;
 
-			// Create the game
-			console.log("Calling createGame mutation with:", {
+			// Create the game with automatic live input
+			console.log("Calling createGameWithStream action with:", {
 				format,
 				homeTeamId,
 				awayTeamId,
@@ -147,7 +147,7 @@ function NewGamePage() {
 				fieldInfo,
 			});
 
-			const gameId = await createGame({
+			const gameId = await createGameWithStream({
 				format,
 				homeTeamId: homeTeamId as Id<"teams">,
 				awayTeamId: awayTeamId as Id<"teams">,

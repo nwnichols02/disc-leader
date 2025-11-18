@@ -4,10 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_OPTIONS='--import ./instrument.server.mjs' vite dev --port 3000",
-    "build": "vite build && cp instrument.server.mjs .output/server",
+    "build": "vite build && cp instrument.server.mjs dist/server",
     "serve": "vite preview",
     "test": "vitest run",
-    "start": "node --import ./.output/server/instrument.server.mjs .output/server/index.mjs",
+    "start": "node --import ./dist/server/instrument.server.mjs dist/server/server.js",
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check"

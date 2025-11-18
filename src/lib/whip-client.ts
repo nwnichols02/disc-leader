@@ -105,8 +105,11 @@ export class WHIPClient {
 
 			this.isConnected = true;
 
-			// Show preview if video element provided
-			if (this.videoElement) {
+			// Show preview if video element provided and stream is not a canvas stream
+			// Canvas streams should not replace the video element's srcObject
+			// as it would interfere with the canvas rendering
+			if (this.videoElement && this.videoElement.srcObject === null) {
+				// Only set if not already set (to avoid interfering with canvas)
 				this.videoElement.srcObject = stream;
 			}
 		} catch (error) {

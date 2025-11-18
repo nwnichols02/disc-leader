@@ -235,7 +235,9 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 		>
 			<iframe
 				src={
-					"https://customer-zcky1xy945hsqbb7.cloudflarestream.com/7ae70e0f62e814015ed73aaa04bb5613/iframe?poster=https%3A%2F%2Fcustomer-zcky1xy945hsqbb7.cloudflarestream.com%2F7ae70e0f62e814015ed73aaa04bb5613%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600"
+					"https://customer-zcky1xy945hsqbb7.cloudflarestream.com/bf3645b283bd78b9937d036598a395d2/iframe"
+					// iframeSrc
+					// "https://customer-zcky1xy945hsqbb7.cloudflarestream.com/7ae70e0f62e814015ed73aaa04bb5613/iframe?poster=https%3A%2F%2Fcustomer-zcky1xy945hsqbb7.cloudflarestream.com%2F7ae70e0f62e814015ed73aaa04bb5613%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600"
 				}
 				loading="lazy"
 				style={{

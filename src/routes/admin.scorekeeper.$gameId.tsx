@@ -7,7 +7,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { LiveScoreboard } from "../components/LiveScoreboard";
@@ -90,6 +90,8 @@ function ScorekeeperPage() {
 	const updateStreamMutation = useMutation(api.streams.updateGameStream);
 	const createLiveInputAction = useAction(api.streams.createLiveInput);
 	const [isStreamLoading, setIsStreamLoading] = useState(false);
+	const [canvasStream, setCanvasStream] = useState<MediaStream | null>(null);
+	const canvasVideoRef = useRef<HTMLVideoElement>(null);
 
 	// Initialize rules editor state when game loads
 	useEffect(() => {
@@ -158,6 +160,21 @@ function ScorekeeperPage() {
 			alert(`Failed to record turnover: ${err.message}`);
 		}
 	};
+
+	// Memoize the canvas stream ready callback to prevent infinite loops
+	const handleCanvasStreamReady = useCallback((stream: MediaStream | null) => {
+		setCanvasStream(stream);
+	}, []);
+
+	// Update canvas video element when stream changes
+	// This must be before any early returns to follow Rules of Hooks
+	useEffect(() => {
+		if (canvasVideoRef.current && canvasStream) {
+			canvasVideoRef.current.srcObject = canvasStream;
+		} else if (canvasVideoRef.current) {
+			canvasVideoRef.current.srcObject = null;
+		}
+	}, [canvasStream]);
 
 	if (isGamePending || !game) {
 		return (
@@ -258,6 +275,9 @@ function ScorekeeperPage() {
 					gameId: gameId as Id<"games">,
 					streamKey: liveInput.streamKey,
 					streamId: liveInput.uid, // Use the live input UID as streamId
+					streamUrl: liveInput.rtmpUrl, // Store RTMP URL
+					webRtcPublishUrl: liveInput.webRtcPublishUrl, // Store WebRTC publish URL
+					webRtcPlaybackUrl: liveInput.webRtcPlaybackUrl, // Store WebRTC playback URL
 					streamStatus: "upcoming",
 					streamStartTime: Date.now(),
 				});
@@ -435,12 +455,34 @@ function ScorekeeperPage() {
 				/>
 			</div>
 
+			{/* Canvas Video Display - Show canvas stream on scorekeeper page */}
+			{canvasStream && (
+				<div className="max-w-4xl mx-auto px-4 pb-4">
+					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+						<h3 className="text-lg font-semibold text-gray-900 mb-3">
+							Live Stream Preview
+						</h3>
+						<div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+							<video
+								ref={canvasVideoRef}
+								autoPlay
+								playsInline
+								muted
+								className="w-full h-full object-cover"
+							/>
+						</div>
+					</div>
+				</div>
+			)}
+
 			{/* Browser Stream - Show when stream is active or can be started */}
 			{(streamInfo?.streamStatus === "live" || canStartStream) &&
-				game.webRtcPublishUrl && (
+				streamInfo?.webRtcPublishUrl && (
 					<div className="max-w-4xl mx-auto px-4 pb-4">
 						<BrowserStream
-							webRtcPublishUrl={game.webRtcPublishUrl}
+							webRtcPublishUrl={streamInfo.webRtcPublishUrl}
+							useCanvas={true}
+							onCanvasStreamReady={handleCanvasStreamReady}
 							onStreamStart={() => {
 								// Stream started from browser
 								if (streamInfo?.streamStatus !== "live") {

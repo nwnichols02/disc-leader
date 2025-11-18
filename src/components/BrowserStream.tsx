@@ -22,6 +22,8 @@ export interface BrowserStreamProps {
 	onStreamStart?: () => void;
 	onStreamStop?: () => void;
 	onError?: (error: string) => void;
+	onCanvasStreamReady?: (stream: MediaStream | null) => void;
+	useCanvas?: boolean;
 }
 
 export const BrowserStream: FC<BrowserStreamProps> = ({
@@ -29,6 +31,8 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 	onStreamStart,
 	onStreamStop,
 	onError,
+	onCanvasStreamReady,
+	useCanvas = false,
 }) => {
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
@@ -39,15 +43,127 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 	const [audioEnabled, setAudioEnabled] = useState(true);
 
 	const videoRef = useRef<HTMLVideoElement>(null);
+	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const mediaStreamRef = useRef<MediaStream | null>(null);
+	const canvasStreamRef = useRef<MediaStream | null>(null);
 	const whipClientRef = useRef<WHIPClient | null>(null);
+	const animationFrameRef = useRef<number | null>(null);
+	// Store callback in ref to avoid dependency issues
+	const onCanvasStreamReadyRef = useRef(onCanvasStreamReady);
+
+	// Update callback ref when it changes
+	useEffect(() => {
+		onCanvasStreamReadyRef.current = onCanvasStreamReady;
+	}, [onCanvasStreamReady]);
 
 	// Cleanup on unmount
 	useEffect(() => {
 		return () => {
 			stopStream();
+			if (animationFrameRef.current) {
+				cancelAnimationFrame(animationFrameRef.current);
+			}
 		};
 	}, []);
+
+	// Canvas rendering loop
+	useEffect(() => {
+		if (!useCanvas || !canvasRef.current || !videoRef.current || !hasAccess || !mediaStreamRef.current) {
+			return;
+		}
+
+		const canvas = canvasRef.current;
+		const video = videoRef.current;
+		const ctx = canvas.getContext("2d");
+
+		if (!ctx) {
+			return;
+		}
+
+		// Set canvas size to match video
+		const updateCanvasSize = () => {
+			if (video.videoWidth && video.videoHeight) {
+				canvas.width = video.videoWidth;
+				canvas.height = video.videoHeight;
+			}
+		};
+
+		updateCanvasSize();
+
+		// Create canvas stream if supported
+		let canvasStream: MediaStream | null = null;
+		if (canvas.captureStream && mediaStreamRef.current) {
+			try {
+				canvasStream = canvas.captureStream(30); // 30 FPS
+				
+				// Add audio tracks from the original media stream to canvas stream
+				// Canvas only captures video, so we need to add audio separately
+				if (canvasStream) {
+					const audioTracks = mediaStreamRef.current.getAudioTracks();
+					audioTracks.forEach((track) => {
+						canvasStream!.addTrack(track);
+					});
+					
+					canvasStreamRef.current = canvasStream;
+					onCanvasStreamReadyRef.current?.(canvasStream);
+				}
+			} catch (err) {
+				console.error("Failed to create canvas stream:", err);
+			}
+		}
+
+		// Render loop - continuously draw video frames to canvas
+		const drawFrame = () => {
+			if (video.readyState >= video.HAVE_CURRENT_DATA && video.videoWidth > 0 && video.videoHeight > 0) {
+				updateCanvasSize();
+				// Clear canvas before drawing to avoid artifacts
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+			}
+			animationFrameRef.current = requestAnimationFrame(drawFrame);
+		};
+
+		// Start rendering when video is ready
+		const handleLoadedMetadata = () => {
+			updateCanvasSize();
+			// Start the render loop immediately
+			drawFrame();
+		};
+
+		const handleCanPlay = () => {
+			// Ensure canvas is rendering when video can play
+			if (animationFrameRef.current === null) {
+				drawFrame();
+			}
+		};
+
+		video.addEventListener("loadedmetadata", handleLoadedMetadata);
+		video.addEventListener("canplay", handleCanPlay);
+		
+		// Start immediately if video is already ready
+		if (video.readyState >= video.HAVE_METADATA) {
+			handleLoadedMetadata();
+		}
+		
+		// Also start if video can play
+		if (video.readyState >= video.HAVE_CURRENT_DATA) {
+			handleCanPlay();
+		}
+
+		return () => {
+			video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+			video.removeEventListener("canplay", handleCanPlay);
+			if (animationFrameRef.current) {
+				cancelAnimationFrame(animationFrameRef.current);
+				animationFrameRef.current = null;
+			}
+			if (canvasStream) {
+				canvasStream.getTracks().forEach((track) => track.stop());
+				canvasStreamRef.current = null;
+				onCanvasStreamReadyRef.current?.(null);
+			}
+		};
+	}, [useCanvas, hasAccess]);
 
 	// Request camera and microphone access
 	const requestMediaAccess = async (): Promise<MediaStream | null> => {
@@ -135,15 +251,49 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 		setError(null);
 
 		try {
-			// Create WHIP client
+			// Use canvas stream if enabled, otherwise use media stream directly
+			let streamToPublish: MediaStream;
+			
+			if (useCanvas) {
+				// Wait for canvas stream to be ready
+				if (!canvasStreamRef.current) {
+					setError("Canvas stream not ready. Please wait a moment and try again.");
+					setIsLoading(false);
+					return;
+				}
+				streamToPublish = canvasStreamRef.current;
+				
+				// Verify canvas stream has video tracks
+				const videoTracks = streamToPublish.getVideoTracks();
+				if (videoTracks.length === 0) {
+					setError("Canvas stream has no video tracks");
+					setIsLoading(false);
+					return;
+				}
+				
+				// Check if canvas is actually rendering (has dimensions)
+				if (canvasRef.current) {
+					const canvas = canvasRef.current;
+					if (canvas.width === 0 || canvas.height === 0) {
+						setError("Canvas has no dimensions. Video may not be loaded yet.");
+						setIsLoading(false);
+						return;
+					}
+				}
+			} else {
+				streamToPublish = mediaStreamRef.current;
+			}
+
+			// Create WHIP client - don't pass video element when using canvas
+			// to avoid interfering with canvas rendering
 			const whipClient = new WHIPClient(
 				webRtcPublishUrl,
-				videoRef.current || undefined,
+				useCanvas ? undefined : videoRef.current || undefined,
 			);
 			whipClientRef.current = whipClient;
 
 			// Start publishing stream via WHIP
-			await whipClient.publish(mediaStreamRef.current);
+			await whipClient.publish(streamToPublish);
 
 			setIsStreaming(true);
 			setIsLoading(false);
@@ -173,6 +323,15 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 				console.error("Error stopping WHIP client:", err);
 			}
 			whipClientRef.current = null;
+		}
+
+		// Stop canvas stream tracks
+		if (canvasStreamRef.current) {
+			canvasStreamRef.current.getTracks().forEach((track) => {
+				track.stop();
+			});
+			canvasStreamRef.current = null;
+			onCanvasStreamReadyRef.current?.(null);
 		}
 
 		// Stop all tracks
@@ -269,6 +428,13 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 						muted
 						className="w-full h-full object-cover"
 					/>
+					{useCanvas && (
+						<canvas
+							ref={canvasRef}
+							className="hidden"
+							style={{ display: "none" }}
+						/>
+					)}
 					{!videoEnabled && hasAccess && (
 						<div className="absolute inset-0 flex items-center justify-center bg-gray-900">
 							<VideoOff className="w-16 h-16 text-gray-400" />

@@ -8,6 +8,7 @@
 import { action, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { api } from "./_generated/api";
 
 /**
  * Get Cloudflare API base URL
@@ -64,19 +65,103 @@ export const createLiveInput = action({
 			const data = await response.json();
 			const liveInput = data.result;
 
+			// Extract stream key from rtmps object (as per Cloudflare API response)
+			const streamKey = liveInput.rtmps?.streamKey || liveInput.streamKey;
+			const rtmpUrl = liveInput.rtmps?.url || liveInput.rtmp?.url;
+			const uid = liveInput.uid;
+
+			// Extract WebRTC URLs from API response
+			// The API returns webRTC.url and webRTCPlayback.url directly
+			let webRtcPublishUrl = liveInput.webRTC?.url;
+			let webRtcPlaybackUrl = liveInput.webRTCPlayback?.url;
+
+			// Fallback: Construct URLs if not provided in response
+			// Format: https://customer-{accountId}.cloudflarestream.com/{uid}/webRTC/publish
+			if (!webRtcPublishUrl) {
+				webRtcPublishUrl = `https://customer-${accountId}.cloudflarestream.com/${uid}/webRTC/publish`;
+			}
+			if (!webRtcPlaybackUrl) {
+				webRtcPlaybackUrl = `https://customer-${accountId}.cloudflarestream.com/${uid}/webRTC/play`;
+			}
+
 			return {
 				success: true,
-				streamKey: liveInput.streamKey,
-				rtmpUrl: liveInput.rtmps?.url || liveInput.rtmp?.url,
-				uid: liveInput.uid,
-				webRtcPublishUrl: liveInput.webRTC?.url,
-				webRtcPlaybackUrl: liveInput.webRTCPlayback?.url,
+				streamKey,
+				rtmpUrl,
+				uid,
+				webRtcPublishUrl,
+				webRtcPlaybackUrl,
 			};
 		} catch (error) {
 			console.error("Error creating live input:", error);
 			throw error instanceof Error
 				? error
 				: new Error("Unknown error creating live input");
+		}
+	},
+});
+
+/**
+ * Get live input details from Cloudflare
+ * Useful for fetching stream information if webRtcPublishUrl is missing
+ */
+export const getLiveInput = action({
+	args: { uid: v.string() },
+	handler: async (ctx, args) => {
+		const accountId = process.env.CLOUDFLARE_READ_ONLY_ACCOUNT_ID;
+		const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+
+		if (!accountId || !apiToken) {
+			throw new Error("Cloudflare credentials not configured");
+		}
+
+		try {
+			const url = `${getCloudflareApiUrl(accountId)}/live_inputs/${args.uid}`;
+			const response = await fetch(url, {
+				method: "GET",
+				headers: getCloudflareHeaders(apiToken),
+			});
+
+			if (!response.ok) {
+				const error = await response.text();
+				throw new Error(`Cloudflare API error: ${error}`);
+			}
+
+			const data = await response.json();
+			const liveInput = data.result;
+
+			// Extract stream key from rtmps object
+			const streamKey = liveInput.rtmps?.streamKey || liveInput.streamKey;
+			const rtmpUrl = liveInput.rtmps?.url || liveInput.rtmp?.url;
+			const uid = liveInput.uid;
+
+			// Extract WebRTC URLs from API response
+			// The API returns webRTC.url and webRTCPlayback.url directly
+			let webRtcPublishUrl = liveInput.webRTC?.url;
+			let webRtcPlaybackUrl = liveInput.webRTCPlayback?.url;
+
+			// Fallback: Construct URLs if not provided in response
+			// Format: https://customer-{accountId}.cloudflarestream.com/{uid}/webRTC/publish
+			if (!webRtcPublishUrl) {
+				webRtcPublishUrl = `https://customer-${accountId}.cloudflarestream.com/${uid}/webRTC/publish`;
+			}
+			if (!webRtcPlaybackUrl) {
+				webRtcPlaybackUrl = `https://customer-${accountId}.cloudflarestream.com/${uid}/webRTC/play`;
+			}
+
+			return {
+				success: true,
+				streamKey,
+				rtmpUrl,
+				uid,
+				webRtcPublishUrl,
+				webRtcPlaybackUrl,
+			};
+		} catch (error) {
+			console.error("Error getting live input:", error);
+			throw error instanceof Error
+				? error
+				: new Error("Unknown error getting live input");
 		}
 	},
 });
@@ -121,6 +206,73 @@ export const getStreamStatus = action({
 				? error
 				: new Error("Unknown error getting stream status");
 		}
+	},
+});
+
+/**
+ * Fetch live input details and update game with WebRTC URLs
+ * Useful when a game has a streamId but missing webRtcPublishUrl
+ * 
+ * @param gameId - The game ID (required)
+ * @param streamId - Optional streamId. If not provided, will be fetched from the game
+ */
+export const fetchAndUpdateLiveInput = action({
+	args: { 
+		gameId: v.id("games"),
+		streamId: v.optional(v.string()),
+	},
+	handler: async (ctx, args): Promise<{
+		success: boolean;
+		webRtcPublishUrl: string;
+		webRtcPlaybackUrl: string;
+		rtmpUrl: string | undefined;
+	}> => {
+		let streamId: string | undefined = args.streamId;
+
+		// If streamId not provided, get it from the game
+		if (!streamId) {
+			const game = await ctx.runQuery(api.games.getGame, {
+				gameId: args.gameId,
+			}) as { streamId?: string } | null;
+
+			if (!game) {
+				throw new Error("Game not found");
+			}
+
+			streamId = game.streamId ?? undefined;
+
+			if (!streamId) {
+				throw new Error("Game does not have a streamId. Create a live input first.");
+			}
+		}
+
+		// Fetch live input details from Cloudflare
+		const liveInputData = await ctx.runAction(api.streams.getLiveInput, {
+			uid: streamId,
+		}) as {
+			success: boolean;
+			streamKey: string;
+			rtmpUrl: string | undefined;
+			uid: string;
+			webRtcPublishUrl: string;
+			webRtcPlaybackUrl: string;
+		};
+
+		// Update the game with the fetched WebRTC URLs
+		await ctx.runMutation(api.streams.updateGameStream, {
+			gameId: args.gameId,
+			streamKey: liveInputData.streamKey,
+			streamUrl: liveInputData.rtmpUrl,
+			webRtcPublishUrl: liveInputData.webRtcPublishUrl,
+			webRtcPlaybackUrl: liveInputData.webRtcPlaybackUrl,
+		});
+
+		return {
+			success: true,
+			webRtcPublishUrl: liveInputData.webRtcPublishUrl,
+			webRtcPlaybackUrl: liveInputData.webRtcPlaybackUrl,
+			rtmpUrl: liveInputData.rtmpUrl,
+		};
 	},
 });
 
@@ -172,6 +324,7 @@ export const updateGameStream = mutation({
 
 /**
  * Get stream information for a game
+ * If webRtcPublishUrl is missing but streamId exists, construct it from the streamId
  */
 export const getGameStream = query({
 	args: {
@@ -183,12 +336,27 @@ export const getGameStream = query({
 			throw new Error("Game not found");
 		}
 
+		// If webRtcPublishUrl is missing but we have streamId, construct it
+		// Note: This is a computed value, not stored in DB. The URL should be
+		// stored when the live input is created via createLiveInput action.
+		let webRtcPublishUrl = game.webRtcPublishUrl;
+		let webRtcPlaybackUrl = game.webRtcPlaybackUrl;
+
+		if (!webRtcPublishUrl && game.streamId) {
+			const accountId = process.env.CLOUDFLARE_READ_ONLY_ACCOUNT_ID;
+			if (accountId) {
+				// Construct URLs from streamId (uid) - these can be computed
+				webRtcPublishUrl = `https://customer-${accountId}.cloudflarestream.com/${game.streamId}/whip`;
+				webRtcPlaybackUrl = `https://customer-${accountId}.cloudflarestream.com/${game.streamId}/whep`;
+			}
+		}
+
 		return {
 			streamId: game.streamId,
 			streamStatus: game.streamStatus,
 			streamUrl: game.streamUrl,
-			webRtcPublishUrl: game.webRtcPublishUrl,
-			webRtcPlaybackUrl: game.webRtcPlaybackUrl,
+			webRtcPublishUrl,
+			webRtcPlaybackUrl,
 			streamStartTime: game.streamStartTime,
 			streamEndTime: game.streamEndTime,
 			// Don't return streamKey to client (security)

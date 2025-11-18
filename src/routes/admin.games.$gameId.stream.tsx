@@ -14,7 +14,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { Copy, Check, Play, Square, Loader2 } from "lucide-react";
+import { Copy, Check, Play, Square, Loader2, RefreshCw } from "lucide-react";
 import { useAction } from "convex/react";
 import { BrowserStream } from "../../components/BrowserStream";
 
@@ -40,6 +40,8 @@ function StreamManagementPage() {
 	// Mutations and Actions
 	const updateStream = useMutation(api.streams.updateGameStream);
 	const createLiveInputAction = useAction(api.streams.createLiveInput);
+	const fetchAndUpdateLiveInputAction = useAction(api.streams.fetchAndUpdateLiveInput);
+	const [isFetching, setIsFetching] = useState(false);
 
 	// Copy to clipboard
 	const copyToClipboard = async (text: string, field: string) => {
@@ -63,6 +65,8 @@ function StreamManagementPage() {
 			await updateStream({
 				gameId: gameId as Id<"games">,
 				streamKey: data.streamKey,
+				streamId: data.uid,
+				streamUrl: data.rtmpUrl,
 				webRtcPublishUrl: data.webRtcPublishUrl,
 				webRtcPlaybackUrl: data.webRtcPlaybackUrl,
 				streamStatus: "upcoming",
@@ -81,6 +85,27 @@ function StreamManagementPage() {
 			);
 		} finally {
 			setIsCreating(false);
+		}
+	};
+
+	// Fetch and update live input details from Cloudflare
+	const handleFetchLiveInput = async () => {
+		setIsFetching(true);
+		try {
+			const data = await fetchAndUpdateLiveInputAction({
+				gameId: gameId as Id<"games">,
+			});
+
+			alert(
+				`Live input details fetched and updated!\n\nWebRTC Publish URL: ${data.webRtcPublishUrl}\n\nWebRTC Playback URL: ${data.webRtcPlaybackUrl}\n\nRTMP URL: ${data.rtmpUrl}`,
+			);
+		} catch (error) {
+			console.error("Error fetching live input:", error);
+			alert(
+				error instanceof Error ? error.message : "Failed to fetch live input",
+			);
+		} finally {
+			setIsFetching(false);
 		}
 	};
 
@@ -166,6 +191,31 @@ function StreamManagementPage() {
 						</div>
 					) : (
 						<div className="space-y-4">
+							{/* Fetch Live Input Button - Show if streamId exists but webRtcPublishUrl is missing */}
+							{streamInfo?.streamId && !streamInfo?.webRtcPublishUrl && (
+								<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+									<p className="text-sm text-yellow-800 mb-3">
+										Stream ID exists but WebRTC URLs are missing. Fetch details from Cloudflare to update.
+									</p>
+									<button
+										onClick={handleFetchLiveInput}
+										disabled={isFetching}
+										className="inline-flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
+									>
+										{isFetching ? (
+											<>
+												<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+												Fetching...
+											</>
+										) : (
+											<>
+												<RefreshCw className="w-4 h-4 mr-2" />
+												Fetch Live Input Details
+											</>
+										)}
+									</button>
+								</div>
+							)}
 							{/* Current Status */}
 							<div>
 								<label className="block text-sm font-medium text-gray-700 mb-1">

@@ -18,7 +18,6 @@ todos.json
 .env.local
 .env
 .cursorrules
-instrument.server.mjs
 
 docs
 memory-bank

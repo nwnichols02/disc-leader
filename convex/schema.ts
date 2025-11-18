@@ -62,6 +62,8 @@ export default defineSchema({
       v.literal("failed")
     )),
     streamUrl: v.optional(v.string()), // HLS manifest URL
+    webRtcPublishUrl: v.optional(v.string()), // WebRTC publish URL (WHIP)
+    webRtcPlaybackUrl: v.optional(v.string()), // WebRTC playback URL (WHEP)
     streamStartTime: v.optional(v.number()), // Unix timestamp
     streamEndTime: v.optional(v.number()),
   })

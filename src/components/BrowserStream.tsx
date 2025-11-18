@@ -2,45 +2,45 @@
  * BrowserStream Component
  *
  * Captures video/audio from the user's browser using MediaDevices API
- * and streams it to Cloudflare Stream.
+ * and streams it to Cloudflare Stream using WHIP (WebRTC-HTTP Ingestion Protocol).
  *
  * Features:
  * - Camera and microphone capture
  * - Live preview
  * - Start/stop streaming controls
  * - Error handling and permissions
+ * - Direct browser-to-Cloudflare streaming via WebRTC
  */
 
 import type { FC } from "react";
 import { useState, useRef, useEffect } from "react";
 import { Video, VideoOff, Mic, MicOff, Loader2, X } from "lucide-react";
-import { env } from "@/env";
+import { WHIPClient } from "@/lib/whip-client";
 
 export interface BrowserStreamProps {
-	streamKey: string;
-	rtmpUrl?: string;
+	webRtcPublishUrl: string;
 	onStreamStart?: () => void;
 	onStreamStop?: () => void;
 	onError?: (error: string) => void;
 }
 
 export const BrowserStream: FC<BrowserStreamProps> = ({
-	streamKey,
-	rtmpUrl,
+	webRtcPublishUrl,
 	onStreamStart,
 	onStreamStop,
 	onError,
 }) => {
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isRequestingAccess, setIsRequestingAccess] = useState(false);
+	const [hasAccess, setHasAccess] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [videoEnabled, setVideoEnabled] = useState(true);
 	const [audioEnabled, setAudioEnabled] = useState(true);
 
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const mediaStreamRef = useRef<MediaStream | null>(null);
-	const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-	const websocketRef = useRef<WebSocket | null>(null);
+	const whipClientRef = useRef<WHIPClient | null>(null);
 
 	// Cleanup on unmount
 	useEffect(() => {
@@ -68,6 +68,7 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 				videoRef.current.srcObject = stream;
 			}
 
+			setHasAccess(true);
 			return stream;
 		} catch (err) {
 			const errorMessage =
@@ -76,15 +77,22 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 					: "Failed to access camera/microphone";
 			setError(errorMessage);
 			onError?.(errorMessage);
+			setHasAccess(false);
 
 			// Handle specific permission errors
 			if (err instanceof DOMException) {
 				if (err.name === "NotAllowedError") {
-					setError("Camera/microphone permission denied");
+					setError(
+						"Camera/microphone permission denied. Please allow access in your browser settings.",
+					);
 				} else if (err.name === "NotFoundError") {
-					setError("No camera/microphone found");
+					setError("No camera/microphone found on this device");
 				} else if (err.name === "NotReadableError") {
-					setError("Camera/microphone is already in use");
+					setError(
+						"Camera/microphone is already in use by another application",
+					);
+				} else if (err.name === "OverconstrainedError") {
+					setError("Camera doesn't support the requested settings");
 				}
 			}
 
@@ -92,113 +100,50 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 		}
 	};
 
+	// Request camera/mic access for preview
+	const requestAccess = async () => {
+		setIsRequestingAccess(true);
+		setError(null);
+
+		const stream = await requestMediaAccess();
+		if (!stream) {
+			setIsRequestingAccess(false);
+			return;
+		}
+
+		mediaStreamRef.current = stream;
+		setIsRequestingAccess(false);
+	};
+
 	// Start streaming
 	const startStream = async () => {
 		if (isStreaming) return;
+
+		if (!webRtcPublishUrl) {
+			setError("WebRTC publish URL not configured");
+			onError?.("WebRTC publish URL not configured");
+			return;
+		}
+
+		// Ensure we have media access
+		if (!mediaStreamRef.current || !hasAccess) {
+			setError("Please enable camera access first");
+			return;
+		}
 
 		setIsLoading(true);
 		setError(null);
 
 		try {
-			// Request media access
-			const stream = await requestMediaAccess();
-			if (!stream) {
-				setIsLoading(false);
-				return;
-			}
+			// Create WHIP client
+			const whipClient = new WHIPClient(
+				webRtcPublishUrl,
+				videoRef.current || undefined,
+			);
+			whipClientRef.current = whipClient;
 
-			mediaStreamRef.current = stream;
-
-			// For browser-based streaming to Cloudflare, we have a few options:
-			// 1. Use MediaRecorder + WebSocket to send chunks
-			// 2. Use WebRTC (if Cloudflare supports it)
-			// 3. Use a library like HLS.js or similar
-
-			// Use MediaRecorder to capture video chunks
-			// Then send via WebSocket to backend server that forwards to Cloudflare RTMP
-			const options: MediaRecorderOptions = {
-				mimeType: "video/webm;codecs=vp8,opus",
-				videoBitsPerSecond: 2500000, // 2.5 Mbps
-			};
-
-			// Check if the mime type is supported
-			if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
-				// Try alternative codecs
-				if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")) {
-					options.mimeType = "video/webm;codecs=vp9,opus";
-				} else if (MediaRecorder.isTypeSupported("video/webm")) {
-					options.mimeType = "video/webm";
-				} else {
-					// Fallback to default
-					delete options.mimeType;
-				}
-			}
-
-			const mediaRecorder = new MediaRecorder(stream, options);
-			mediaRecorderRef.current = mediaRecorder;
-
-			// Connect to WebSocket server for streaming
-			// Note: You'll need to set up a WebSocket server that:
-			// 1. Receives WebM chunks from browser
-			// 2. Converts to RTMP format (using ffmpeg or similar)
-			// 3. Sends to Cloudflare RTMP endpoint: rtmps://live.cloudflare.com:443/live/{streamKey}
-			const wsUrl =
-				env.VITE_WEBSOCKET_STREAM_URL || "ws://localhost:8080/stream";
-
-			try {
-				const ws = new WebSocket(
-					`${wsUrl}?streamKey=${encodeURIComponent(streamKey)}`,
-				);
-				websocketRef.current = ws;
-
-				ws.onopen = () => {
-					console.log("WebSocket connected for streaming");
-				};
-
-				ws.onerror = (error) => {
-					console.error("WebSocket error:", error);
-					setError("Failed to connect to streaming server");
-					stopStream();
-				};
-
-				ws.onclose = () => {
-					console.log("WebSocket closed");
-				};
-
-				// Handle data chunks - send to WebSocket server
-				mediaRecorder.ondataavailable = (event) => {
-					if (
-						event.data &&
-						event.data.size > 0 &&
-						ws.readyState === WebSocket.OPEN
-					) {
-						// Send chunk as ArrayBuffer for efficient transfer
-						event.data.arrayBuffer().then((buffer) => {
-							ws.send(buffer);
-						});
-					}
-				};
-
-				mediaRecorder.onerror = (event) => {
-					console.error("MediaRecorder error:", event);
-					setError("Recording error occurred");
-					stopStream();
-				};
-
-				mediaRecorder.onstop = () => {
-					if (ws.readyState === WebSocket.OPEN) {
-						ws.close();
-					}
-				};
-
-				// Start recording - send chunks every 500ms for low latency
-				mediaRecorder.start(500);
-			} catch (err) {
-				console.error("Error setting up WebSocket:", err);
-				setError("Failed to set up streaming connection");
-				stopStream();
-				return;
-			}
+			// Start publishing stream via WHIP
+			await whipClient.publish(mediaStreamRef.current);
 
 			setIsStreaming(true);
 			setIsLoading(false);
@@ -215,15 +160,19 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 	};
 
 	// Stop streaming
-	const stopStream = () => {
-		if (!isStreaming && !mediaStreamRef.current) return;
+	const stopStream = async () => {
+		if (!isStreaming && !mediaStreamRef.current && !whipClientRef.current) {
+			return;
+		}
 
-		// Stop MediaRecorder
-		if (
-			mediaRecorderRef.current &&
-			mediaRecorderRef.current.state !== "inactive"
-		) {
-			mediaRecorderRef.current.stop();
+		// Stop WHIP client
+		if (whipClientRef.current) {
+			try {
+				await whipClientRef.current.stop();
+			} catch (err) {
+				console.error("Error stopping WHIP client:", err);
+			}
+			whipClientRef.current = null;
 		}
 
 		// Stop all tracks
@@ -234,19 +183,34 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 			mediaStreamRef.current = null;
 		}
 
-		// Close WebSocket if open
-		if (websocketRef.current) {
-			websocketRef.current.close();
-			websocketRef.current = null;
-		}
-
-		// Clear video preview
-		if (videoRef.current) {
+		// Clear video preview only if stopping stream (not just revoking access)
+		if (videoRef.current && isStreaming) {
 			videoRef.current.srcObject = null;
 		}
 
 		setIsStreaming(false);
 		onStreamStop?.();
+	};
+
+	// Revoke camera access (stop preview but don't stop stream if active)
+	const revokeAccess = async () => {
+		if (isStreaming) {
+			setError("Cannot revoke access while streaming. Stop the stream first.");
+			return;
+		}
+
+		if (mediaStreamRef.current) {
+			mediaStreamRef.current.getTracks().forEach((track) => {
+				track.stop();
+			});
+			mediaStreamRef.current = null;
+		}
+
+		if (videoRef.current) {
+			videoRef.current.srcObject = null;
+		}
+
+		setHasAccess(false);
 	};
 
 	// Toggle video
@@ -305,16 +269,33 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 						muted
 						className="w-full h-full object-cover"
 					/>
-					{!videoEnabled && (
+					{!videoEnabled && hasAccess && (
 						<div className="absolute inset-0 flex items-center justify-center bg-gray-900">
 							<VideoOff className="w-16 h-16 text-gray-400" />
 						</div>
 					)}
-					{!mediaStreamRef.current && (
+					{!hasAccess && (
 						<div className="absolute inset-0 flex items-center justify-center bg-gray-900">
 							<div className="text-center text-white">
 								<Video className="w-16 h-16 mx-auto mb-2 text-gray-400" />
-								<p className="text-sm">Camera preview will appear here</p>
+								<p className="text-sm mb-4">Camera preview will appear here</p>
+								<button
+									onClick={requestAccess}
+									disabled={isRequestingAccess}
+									className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+								>
+									{isRequestingAccess ? (
+										<>
+											<Loader2 className="w-4 h-4 animate-spin" />
+											Requesting access...
+										</>
+									) : (
+										<>
+											<Video className="w-4 h-4" />
+											Enable Camera & Microphone
+										</>
+									)}
+								</button>
 							</div>
 						</div>
 					)}
@@ -358,12 +339,22 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 						<span className="text-sm font-medium">Audio</span>
 					</button>
 
+					{/* Access Control */}
+					{hasAccess && !isStreaming && (
+						<button
+							onClick={revokeAccess}
+							className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+						>
+							Revoke Access
+						</button>
+					)}
+
 					{/* Start/Stop Button */}
 					<div className="flex-1 flex justify-end">
 						{!isStreaming ? (
 							<button
 								onClick={startStream}
-								disabled={isLoading}
+								disabled={isLoading || !hasAccess}
 								className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
 							>
 								{isLoading ? (
@@ -372,7 +363,11 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 									<Video className="w-4 h-4" />
 								)}
 								<span className="font-medium">
-									{isLoading ? "Starting..." : "Start Streaming"}
+									{isLoading
+										? "Starting..."
+										: !hasAccess
+											? "Enable Camera First"
+											: "Start Streaming"}
 								</span>
 							</button>
 						) : (
@@ -397,7 +392,8 @@ export const BrowserStream: FC<BrowserStreamProps> = ({
 							</p>
 						</div>
 						<p className="text-xs text-green-600 mt-1">
-							Video and audio are being captured and sent to Cloudflare Stream.
+							Video and audio are being streamed directly to Cloudflare Stream
+							via WebRTC.
 						</p>
 					</div>
 				)}

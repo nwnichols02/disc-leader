@@ -145,6 +145,7 @@ function GamePage() {
 					<StreamPlayer
 						streamId={displayGame.streamId}
 						streamUrl={displayGame.streamUrl}
+						webRtcPlaybackUrl={displayGame.webRtcPlaybackUrl}
 						streamStatus={displayGame.streamStatus}
 						autoPlay={displayGame.streamStatus === "live"}
 						className="w-full"

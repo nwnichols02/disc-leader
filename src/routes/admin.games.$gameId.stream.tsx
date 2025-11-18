@@ -16,6 +16,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Copy, Check, Play, Square, Loader2 } from "lucide-react";
 import { useAction } from "convex/react";
+import { BrowserStream } from "../../components/BrowserStream";
 
 export const Route = createFileRoute("/admin/games/$gameId/stream")({
 	component: StreamManagementPage,
@@ -62,6 +63,8 @@ function StreamManagementPage() {
 			await updateStream({
 				gameId: gameId as Id<"games">,
 				streamKey: data.streamKey,
+				webRtcPublishUrl: data.webRtcPublishUrl,
+				webRtcPlaybackUrl: data.webRtcPlaybackUrl,
 				streamStatus: "upcoming",
 				streamStartTime: Date.now(),
 			});
@@ -69,7 +72,7 @@ function StreamManagementPage() {
 			// Store RTMP URL in a way that can be displayed
 			// Note: In production, you might want to store this in the database
 			alert(
-				`Live input created!\n\nRTMP URL: ${data.rtmpUrl}\n\nStream Key: ${data.streamKey}\n\nPlease save these credentials.`,
+				`Live input created!\n\nRTMP URL: ${data.rtmpUrl}\n\nStream Key: ${data.streamKey}\n\nWebRTC Publish URL: ${data.webRtcPublishUrl || "Not available"}\n\nWebRTC Playback URL: ${data.webRtcPlaybackUrl || "Not available"}\n\nPlease save these credentials.`,
 			);
 		} catch (error) {
 			console.error("Error creating live input:", error);
@@ -266,11 +269,83 @@ function StreamManagementPage() {
 								</p>
 							</div>
 
+							{/* WebRTC Publish URL */}
+							{streamInfo.webRtcPublishUrl && (
+								<div>
+									<label className="block text-sm font-medium text-gray-700 mb-1">
+										WebRTC Publish URL (Browser Streaming)
+									</label>
+									<div className="flex items-center gap-2">
+										<input
+											type="text"
+											readOnly
+											value={streamInfo.webRtcPublishUrl}
+											className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono"
+										/>
+										<button
+											onClick={() =>
+												copyToClipboard(
+													streamInfo.webRtcPublishUrl || "",
+													"webrtc-publish",
+												)
+											}
+											className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+											title="Copy WebRTC publish URL"
+										>
+											{copiedField === "webrtc-publish" ? (
+												<Check className="w-4 h-4 text-green-600" />
+											) : (
+												<Copy className="w-4 h-4" />
+											)}
+										</button>
+									</div>
+									<p className="text-xs text-gray-500 mt-1">
+										Use this URL for browser-based streaming (WHIP)
+									</p>
+								</div>
+							)}
+
+							{/* WebRTC Playback URL */}
+							{streamInfo.webRtcPlaybackUrl && (
+								<div>
+									<label className="block text-sm font-medium text-gray-700 mb-1">
+										WebRTC Playback URL (Low-Latency Viewing)
+									</label>
+									<div className="flex items-center gap-2">
+										<input
+											type="text"
+											readOnly
+											value={streamInfo.webRtcPlaybackUrl}
+											className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono"
+										/>
+										<button
+											onClick={() =>
+												copyToClipboard(
+													streamInfo.webRtcPlaybackUrl || "",
+													"webrtc-playback",
+												)
+											}
+											className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+											title="Copy WebRTC playback URL"
+										>
+											{copiedField === "webrtc-playback" ? (
+												<Check className="w-4 h-4 text-green-600" />
+											) : (
+												<Copy className="w-4 h-4" />
+											)}
+										</button>
+									</div>
+									<p className="text-xs text-gray-500 mt-1">
+										Used automatically for low-latency WebRTC playback (WHEP)
+									</p>
+								</div>
+							)}
+
 							{/* Stream URL (for playback) */}
 							{streamInfo.streamUrl && (
 								<div>
 									<label className="block text-sm font-medium text-gray-700 mb-1">
-										Playback URL
+										HLS Playback URL
 									</label>
 									<div className="flex items-center gap-2">
 										<input
@@ -293,37 +368,97 @@ function StreamManagementPage() {
 											)}
 										</button>
 									</div>
+									<p className="text-xs text-gray-500 mt-1">
+										HLS manifest URL (fallback for non-WebRTC browsers)
+									</p>
 								</div>
 							)}
 						</div>
 					)}
 				</div>
 
+				{/* Browser Streaming */}
+				{streamInfo?.webRtcPublishUrl && (
+					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+						<h2 className="text-lg font-semibold text-gray-900 mb-4">
+							Browser Streaming
+						</h2>
+						<p className="text-sm text-gray-600 mb-4">
+							Stream directly from your browser using your camera and
+							microphone. No additional software required!
+						</p>
+						<BrowserStream
+							webRtcPublishUrl={streamInfo.webRtcPublishUrl}
+							onStreamStart={() => {
+								if (streamInfo?.streamStatus !== "live") {
+									handleUpdateStatus("live");
+								}
+							}}
+							onStreamStop={() => {
+								if (streamInfo?.streamStatus === "live") {
+									handleUpdateStatus("completed");
+								}
+							}}
+							onError={(error) => {
+								console.error("Browser stream error:", error);
+								alert(`Streaming error: ${error}`);
+							}}
+						/>
+					</div>
+				)}
+
 				{/* Instructions Card */}
 				<div className="bg-blue-50 rounded-lg border border-blue-200 p-6">
 					<h3 className="text-lg font-semibold text-blue-900 mb-3">
 						How to Stream
 					</h3>
-					<ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
-						<li>Click "Create Live Input" to generate stream credentials</li>
-						<li>Copy the Stream Key and RTMP Endpoint</li>
-						<li>
-							Configure your streaming software (OBS Studio, etc.) with:
-							<ul className="list-disc list-inside ml-6 mt-1">
+					<div className="space-y-4">
+						<div>
+							<h4 className="font-medium text-blue-800 mb-2">
+								Option 1: Browser Streaming (Recommended)
+							</h4>
+							<ol className="list-decimal list-inside space-y-1 text-sm text-blue-800 ml-2">
 								<li>
-									<strong>Server:</strong> rtmps://live.cloudflare.com:443/live/
+									Click "Create Live Input" to generate stream credentials
+								</li>
+								<li>Use the Browser Streaming section above</li>
+								<li>
+									Click "Start Streaming" and allow camera/microphone access
 								</li>
 								<li>
-									<strong>Stream Key:</strong> (use the key shown above)
+									Your stream will appear on the public game page automatically
 								</li>
-							</ul>
-						</li>
-						<li>Start streaming from your software</li>
-						<li>Click "Start Stream" above when ready to go live</li>
-						<li>
-							The stream will appear on the public game page automatically
-						</li>
-					</ol>
+							</ol>
+						</div>
+						<div>
+							<h4 className="font-medium text-blue-800 mb-2">
+								Option 2: OBS Studio or Other Streaming Software
+							</h4>
+							<ol className="list-decimal list-inside space-y-1 text-sm text-blue-800 ml-2">
+								<li>
+									Click "Create Live Input" to generate stream credentials
+								</li>
+								<li>Copy the Stream Key and RTMP Endpoint</li>
+								<li>
+									Configure your streaming software (OBS Studio, etc.) with:
+									<ul className="list-disc list-inside ml-6 mt-1">
+										<li>
+											<strong>Server:</strong>{" "}
+											rtmps://live.cloudflare.com:443/live/
+										</li>
+										<li>
+											<strong>Stream Key:</strong> (use the key shown above)
+										</li>
+									</ul>
+								</li>
+								<li>Start streaming from your software</li>
+								<li>Click "Start Stream" above when ready to go live</li>
+								<li>
+									The stream will appear on the public game page automatically
+								</li>
+							</ol>
+						</div>
+					</div>
 				</div>
 			</main>
 		</div>

@@ -9,16 +9,19 @@
  * - Loading and error states
  * - Auto-play for live streams (with user permission)
  * - HLS adaptive bitrate streaming
+ * - WebRTC (WHEP) low-latency playback for live streams
  */
 
 import type { FC } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { WHEPClient } from "@/lib/whep-client";
 import { Stream } from "@cloudflare/stream-react";
 // import { env } from "@/env";
 
 export interface StreamPlayerProps {
 	streamId?: string | null;
 	streamUrl?: string | null;
+	webRtcPlaybackUrl?: string | null;
 	streamStatus?: "upcoming" | "live" | "completed" | "failed" | null;
 	className?: string;
 	autoPlay?: boolean;
@@ -27,26 +30,58 @@ export interface StreamPlayerProps {
 export const StreamPlayer: FC<StreamPlayerProps> = ({
 	streamId,
 	streamUrl,
+	webRtcPlaybackUrl,
 	streamStatus,
 	className = "",
 	autoPlay = false,
 }) => {
 	const [error, setError] = useState<string | null>(null);
+	const [useWebRtc, setUseWebRtc] = useState(false);
+	const videoRef = useRef<HTMLVideoElement>(null);
+	const whepClientRef = useRef<WHEPClient | null>(null);
 
 	// Validate configuration
 	useEffect(() => {
-		if (!streamId && !streamUrl) {
+		if (!streamId && !streamUrl && !webRtcPlaybackUrl) {
 			return;
 		}
 
 		const accountId = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
-		if (!accountId) {
+		if (!accountId && !webRtcPlaybackUrl) {
 			setError("Cloudflare account not configured");
 		}
-	}, [streamId, streamUrl]);
+	}, [streamId, streamUrl, webRtcPlaybackUrl]);
+
+	// Use WebRTC for live streams if available
+	useEffect(() => {
+		if (
+			webRtcPlaybackUrl &&
+			streamStatus === "live" &&
+			videoRef.current &&
+			!whepClientRef.current
+		) {
+			setUseWebRtc(true);
+			const whepClient = new WHEPClient(webRtcPlaybackUrl, videoRef.current);
+			whepClientRef.current = whepClient;
+
+			whepClient.play().catch((err) => {
+				console.error("WHEP playback error:", err);
+				setError("Failed to start WebRTC playback");
+				setUseWebRtc(false);
+				whepClientRef.current = null;
+			});
+		}
+
+		return () => {
+			if (whepClientRef.current) {
+				whepClientRef.current.stop().catch(console.error);
+				whepClientRef.current = null;
+			}
+		};
+	}, [webRtcPlaybackUrl, streamStatus]);
 
 	// No stream configured
-	if (!streamId && !streamUrl) {
+	if (!streamId && !streamUrl && !webRtcPlaybackUrl) {
 		return (
 			<div
 				className={`bg-gray-100 rounded-lg flex items-center justify-center aspect-video ${className}`}
@@ -133,53 +168,94 @@ export const StreamPlayer: FC<StreamPlayerProps> = ({
 		);
 	}
 
-	// Build stream source URL
-	const accountId = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
-	let streamSrc: string | undefined;
-
-	if (streamId && accountId) {
-		streamSrc = `https://customer-${accountId}.cloudflarestream.com/${streamId}/manifest/video.m3u8`;
-	} else if (streamUrl) {
-		streamSrc = streamUrl;
+	// WebRTC playback (WHEP) for live streams
+	if (useWebRtc && webRtcPlaybackUrl && videoRef.current) {
+		return (
+			<div
+				className={`bg-black rounded-lg overflow-hidden aspect-video ${className}`}
+			>
+				<video
+					ref={videoRef}
+					autoPlay
+					playsInline
+					controls
+					className="w-full h-full"
+					onError={(e) => {
+						console.error("Video playback error:", e);
+						setError("Failed to play video stream");
+					}}
+				/>
+			</div>
+		);
 	}
 
-	// Player container
-	if (!streamSrc) {
+	// Build iframe URL for Cloudflare Stream player
+	const accountId = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
+	let iframeSrc: string | undefined;
+
+	if (streamId && accountId) {
+		// Build iframe URL with query parameters
+		const params = new URLSearchParams();
+		if (autoPlay && streamStatus === "live") {
+			params.set("autoplay", "true");
+		}
+		params.set("preload", "true");
+
+		// Get poster/thumbnail URL
+		const posterUrl = `https://customer-${accountId}.cloudflarestream.com/${streamId}/thumbnails/thumbnail.jpg?time=&height=600`;
+		params.set("poster", posterUrl);
+
+		iframeSrc = `https://customer-${accountId}.cloudflarestream.com/${streamId}/iframe?${params.toString()}`;
+	} else if (streamUrl) {
+		// If we have a streamUrl (HLS manifest), try to extract stream ID
+		// Format: https://customer-<CODE>.cloudflarestream.com/<STREAM_ID>/manifest/video.m3u8
+		const match = streamUrl.match(
+			/customer-([^/]+)\.cloudflarestream\.com\/([^/]+)\//,
+		);
+		if (match && match[2]) {
+			const extractedStreamId = match[2];
+			const params = new URLSearchParams();
+			if (autoPlay && streamStatus === "live") {
+				params.set("autoplay", "true");
+			}
+			params.set("preload", "true");
+			iframeSrc = `https://customer-${match[1]}.cloudflarestream.com/${extractedStreamId}/iframe?${params.toString()}`;
+		}
+	}
+
+	// Player container - use iframe embed
+	if (!iframeSrc) {
 		return null;
 	}
 
 	return (
 		<div
 			className={`bg-black rounded-lg overflow-hidden aspect-video ${className}`}
+			style={{ position: "relative", paddingTop: "56.25%" }}
 		>
-			<Stream
-				src={streamSrc}
-				autoplay={autoPlay && streamStatus === "live"}
-				controls
-				preload="auto"
-				responsive
-				primaryColor="#3b82f6"
-				onError={(err) => {
-					console.error("Stream player error:", err);
+			<iframe
+				src={
+					"https://customer-zcky1xy945hsqbb7.cloudflarestream.com/7ae70e0f62e814015ed73aaa04bb5613/iframe?poster=https%3A%2F%2Fcustomer-zcky1xy945hsqbb7.cloudflarestream.com%2F7ae70e0f62e814015ed73aaa04bb5613%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600"
+				}
+				loading="lazy"
+				style={{
+					border: "none",
+					position: "absolute",
+					top: 0,
+					left: 0,
+					height: "100%",
+					width: "100%",
+					objectFit: "fill",
+					objectPosition: "center",
+				}}
+				allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+				allowFullScreen={true}
+				title="Stream Player"
+				onError={() => {
+					console.error("Iframe load error");
 					setError("Failed to load video stream");
 				}}
 			/>
-			<div style={{ position: "relative", paddingTop: "56.25%" }}>
-				<iframe
-					title="Stream Player"
-					src="https://customer-zcky1xy945hsqbb7.cloudflarestream.com/0f7191c6b50e083db64e869f96fbf4cb/iframe"
-					style={{
-						border: "none",
-						position: "absolute",
-						top: 0,
-						left: 0,
-						height: "100%",
-						width: "100%",
-					}}
-					allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-					allowFullScreen={true}
-				></iframe>
-			</div>
 		</div>
 	);
 };

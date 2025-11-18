@@ -436,29 +436,29 @@ function ScorekeeperPage() {
 			</div>
 
 			{/* Browser Stream - Show when stream is active or can be started */}
-			{(streamInfo?.streamStatus === "live" || canStartStream) && (
-				<div className="max-w-4xl mx-auto px-4 pb-4">
-					<BrowserStream
-						streamKey={game.streamKey || ""}
-						rtmpUrl="rtmps://live.cloudflare.com:443/live/"
-						onStreamStart={() => {
-							// Stream started from browser
-							if (streamInfo?.streamStatus !== "live") {
-								handleStartStream();
-							}
-						}}
-						onStreamStop={() => {
-							// Stream stopped from browser
-							if (streamInfo?.streamStatus === "live") {
-								handleStopStream();
-							}
-						}}
-						onError={(error) => {
-							console.error("Browser stream error:", error);
-						}}
-					/>
-				</div>
-			)}
+			{(streamInfo?.streamStatus === "live" || canStartStream) &&
+				game.webRtcPublishUrl && (
+					<div className="max-w-4xl mx-auto px-4 pb-4">
+						<BrowserStream
+							webRtcPublishUrl={game.webRtcPublishUrl}
+							onStreamStart={() => {
+								// Stream started from browser
+								if (streamInfo?.streamStatus !== "live") {
+									handleStartStream();
+								}
+							}}
+							onStreamStop={() => {
+								// Stream stopped from browser
+								if (streamInfo?.streamStatus === "live") {
+									handleStopStream();
+								}
+							}}
+							onError={(error) => {
+								console.error("Browser stream error:", error);
+							}}
+						/>
+					</div>
+				)}
 
 			{/* Rules Editor for Upcoming Games */}
 			{isUpcoming && showRulesEditor && (

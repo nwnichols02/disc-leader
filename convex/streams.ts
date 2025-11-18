@@ -69,6 +69,8 @@ export const createLiveInput = action({
 				streamKey: liveInput.streamKey,
 				rtmpUrl: liveInput.rtmps?.url || liveInput.rtmp?.url,
 				uid: liveInput.uid,
+				webRtcPublishUrl: liveInput.webRTC?.url,
+				webRtcPlaybackUrl: liveInput.webRTCPlayback?.url,
 			};
 		} catch (error) {
 			console.error("Error creating live input:", error);
@@ -139,6 +141,8 @@ export const updateGameStream = mutation({
 			),
 		),
 		streamUrl: v.optional(v.string()),
+		webRtcPublishUrl: v.optional(v.string()),
+		webRtcPlaybackUrl: v.optional(v.string()),
 		streamStartTime: v.optional(v.number()),
 		streamEndTime: v.optional(v.number()),
 	},
@@ -151,6 +155,10 @@ export const updateGameStream = mutation({
 		if (args.streamStatus !== undefined)
 			updateData.streamStatus = args.streamStatus;
 		if (args.streamUrl !== undefined) updateData.streamUrl = args.streamUrl;
+		if (args.webRtcPublishUrl !== undefined)
+			updateData.webRtcPublishUrl = args.webRtcPublishUrl;
+		if (args.webRtcPlaybackUrl !== undefined)
+			updateData.webRtcPlaybackUrl = args.webRtcPlaybackUrl;
 		if (args.streamStartTime !== undefined)
 			updateData.streamStartTime = args.streamStartTime;
 		if (args.streamEndTime !== undefined)
@@ -179,6 +187,8 @@ export const getGameStream = query({
 			streamId: game.streamId,
 			streamStatus: game.streamStatus,
 			streamUrl: game.streamUrl,
+			webRtcPublishUrl: game.webRtcPublishUrl,
+			webRtcPlaybackUrl: game.webRtcPlaybackUrl,
 			streamStartTime: game.streamStartTime,
 			streamEndTime: game.streamEndTime,
 			// Don't return streamKey to client (security)

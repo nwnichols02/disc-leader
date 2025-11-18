@@ -16,7 +16,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Copy, Check, Play, Square, Loader2, RefreshCw } from "lucide-react";
 import { useAction } from "convex/react";
-import { BrowserStream } from "../../components/BrowserStream";
+import { BrowserStream } from "../components/BrowserStream";
 
 export const Route = createFileRoute("/admin/games/$gameId/stream")({
 	component: StreamManagementPage,
